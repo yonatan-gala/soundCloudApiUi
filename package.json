@@ -1,0 +1,17 @@
+{
+  "name": "soundCloudApiUi",
+  "version": "1.0.0",
+  "description": "soundCloud search UI with Soundcloud API integration",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-connect": "^5.5.0",
+    "gulp-sass": "^4.0.1",
+    "gulp-sass-lint": "^1.4.0"
+  }
+}
