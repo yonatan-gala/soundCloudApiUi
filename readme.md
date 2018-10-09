@@ -43,9 +43,8 @@ searches and should be available for the user in subsequent visits.
   1.total of fetched results
   2.pagination instead of next button
 3. image container
-  1. search cta
-  2. show last search terms after new search
-  3. show search terms in local storage for returning visits.
+  1. show last search terms after new search
+  2. show search terms in local storage for returning visits.
 4. responsive.
 5. UI visual styles
 6. SCSS lint. 
