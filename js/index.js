@@ -24,22 +24,39 @@
 //   5. click event on past search item, invoked only when present. (optional).
 
 const view = {
-    search: {},
+    search: {
+        renderSearch: () => {
+            let search = document.createElement('search');
+            search.setAttribute('id', 'search');
+
+            let input = document.createElement('input');
+            input.setAttribute('id', 'input');
+            input.setAttribute('placeholder', "search some shit");
+            input.className = "form-control";
+
+            let submit = document.createElement('button');
+            submit.setAttribute('id', 'submit');
+            submit.classList.add("btn", "btn--primary");
+            submit.innerText = "search";
+
+            document.getElementById('app').appendChild(search);
+            document.getElementById('search').appendChild(input);
+            document.getElementById('search').appendChild(submit);
+        }
+    },
     results: {
         renderResults: (songs) => {
-            let resultsContainer = document.createElement("div");
-            resultsContainer.className = "results";
-            document.getElementById("app").appendChild(resultsContainer);
+            let resultsContainer = document.createElement('results');
+            document.getElementById('app').appendChild(resultsContainer);
             if (songs.length > 0) {
                 for (let i = 0; i < songs.length; i++) {
-                    let result = document.createElement("div");
-                    result.className = "results__item";
+                    let result = document.createElement('results__item');
+                    result.setAttribute('data-id', i + 1);
                     resultsContainer.appendChild(result);
                     result.innerText = songs[i].title;
                 }
             } else {
-                let message = document.createElement("div");
-                message.className = "results__message";
+                let message = document.createElement('message');
                 resultsContainer.appendChild(message);
                 message.innerText = "shit face";
             }
@@ -58,7 +75,7 @@ const model = {
     getSongs: (arg) => {
         SC.get('/tracks', {
             limit: model.songsLength,
-            // linked_partitioning: 100,
+            //linked_partitioning: 1,
             q: arg
         }).then(function (tracks) {
             model.songs = tracks;
@@ -72,6 +89,7 @@ const model = {
 };
 
 const controller = {
+        renderInit: view.search.renderSearch(),
         searchInput: document.getElementById("input"),
         searchSubmitButton: document.getElementById("submit"),
         id: 'EBquMMXE2x5ZxNs9UElOfb4HbvZK95rc',
@@ -79,6 +97,7 @@ const controller = {
             SC.initialize({
                 client_id: controller.id
             });
+
             controller.searchSubmitButton.onclick = controller.submitSearch;
             controller.searchInput.onkeypress = controller.keySearch;
         },

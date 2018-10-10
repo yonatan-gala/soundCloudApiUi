@@ -3,4 +3,13 @@
 @import "base";
 @import "ui";
 
-body{ background: $test};
+body {
+  background: $test;
+}
+
+results,
+results__item,
+search,
+message {
+  display: block;
+}
