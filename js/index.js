@@ -1,5 +1,116 @@
 "use strict";
 
+const view = {
+    clearSearch: () => {
+        const results = document.getElementById('results');
+        results.remove();
+        console.log("search removed");
+    },
+    renderSearch: () => {
+        const search = document.createElement('search');
+        search.setAttribute('id', 'search');
+
+        const input = document.createElement('input');
+        input.setAttribute('id', 'input');
+        input.setAttribute('placeholder', "search some shit");
+        input.className = "form-control";
+
+        const submit = document.createElement('button');
+        submit.setAttribute('id', 'submit');
+        submit.classList.add("btn", "btn--primary");
+        submit.innerText = "search";
+
+        document.getElementById('app').appendChild(search);
+        document.getElementById('search').appendChild(input);
+        document.getElementById('search').appendChild(submit);
+
+        // todo: create setters.
+    },
+    renderResults: (arg) => {
+        let resultsContainer = document.createElement('results');
+        resultsContainer.setAttribute('id', 'results')
+        document.getElementById('app').appendChild(resultsContainer);
+        if (arg.length > 0) {
+            for (let i = 0; i < arg.length; i++) {
+                let result = document.createElement('results__item');
+                resultsContainer.appendChild(result);
+                result.innerText = arg[i].title;
+            }
+        } else {
+            let message = document.createElement('message');
+            resultsContainer.appendChild(message);
+            message.innerText = "shit face";
+        }
+    },
+    renderPreview: "TBD"
+};
+
+const model = {
+    recentSearch: [],
+    songs: {},
+    songsLength: 6,
+    searchState: "",
+    searchValue: "",
+    getSongs: (arg) => {
+        if (model.searchState === true) {
+            view.clearSearch();
+            model.searchState = "";
+        }
+        SC.get('/tracks', {
+            limit: model.songsLength,
+            q: arg
+        }).then(function (tracks) {
+            model.songs.collection = tracks;
+            // print using view
+            view.renderResults(model.songs.collection);
+            model.recentSearch.push(model.searchValue);
+            model.searchState = true;
+            console.log(this.recentSearch);
+        });
+        console.log(model.searchState, "got songs, changed state, pushed value, promise event");
+    },
+    navigateSongs: (arg) => {
+    }
+};
+
+const controller = {
+    renderInit: view.renderSearch(),
+    searchInput: document.getElementById("input"),
+    searchSubmitButton: document.getElementById("submit"),
+    id: 'EBquMMXE2x5ZxNs9UElOfb4HbvZK95rc',
+    init: () => {
+        SC.initialize({
+            client_id: controller.id
+        });
+        controller.searchSubmitButton.onclick = controller.submitSearch;
+        controller.searchInput.onkeypress = controller.keySearch;
+    },
+    submitSearch:
+        () => {
+            if (model.searchValue !== controller.searchInput.value) {
+                model.searchValue = controller.searchInput.value;
+                model.getSongs(model.searchValue);
+            }
+        },
+    keySearch: (e) => {
+        if (e.keyCode === 13) {
+            controller.submitSearch();
+            return false;
+        }
+    },
+    keyInput: (e) => {
+        if (e.keyCode === 13) {
+            controller.submitSearch();
+            return false;
+        }
+    },
+    navigateSongs: () => {
+    }
+};
+
+window.onload = controller.init;
+
+
 // ## results flow:
 // 1. search by submit button or enter key.
 
@@ -23,104 +134,20 @@
 //   4. click event on close track. invoked only when present. (close button is optional)
 //   5. click event on past search item, invoked only when present. (optional).
 
-const view = {
-    search: {
-        renderSearch: () => {
-            let search = document.createElement('search');
-            search.setAttribute('id', 'search');
+// creating OO approach
+var View = function(){
+    var someparam =  0;
 
-            let input = document.createElement('input');
-            input.setAttribute('id', 'input');
-            input.setAttribute('placeholder', "search some shit");
-            input.className = "form-control";
+    var a1 = function(){
+        console.log('a1 ' + someparam++);
+    };
 
-            let submit = document.createElement('button');
-            submit.setAttribute('id', 'submit');
-            submit.classList.add("btn", "btn--primary");
-            submit.innerText = "search";
+    var b1 = function(){
+        console.log('a1 ' + someparam++);
+    };
 
-            document.getElementById('app').appendChild(search);
-            document.getElementById('search').appendChild(input);
-            document.getElementById('search').appendChild(submit);
-        }
-    },
-    results: {
-        renderResults: (songs) => {
-            let resultsContainer = document.createElement('results');
-            document.getElementById('app').appendChild(resultsContainer);
-            if (songs.length > 0) {
-                for (let i = 0; i < songs.length; i++) {
-                    let result = document.createElement('results__item');
-                    result.setAttribute('data-id', i + 1);
-                    resultsContainer.appendChild(result);
-                    result.innerText = songs[i].title;
-                }
-            } else {
-                let message = document.createElement('message');
-                resultsContainer.appendChild(message);
-                message.innerText = "shit face";
-            }
-        },
-    },
-    recentSearch: (recentSearch) => {
-    },
-    preview: "TBD"
-};
-
-const model = {
-    recentSearch: [],
-    songs: [],
-    songsLength: 6,
-    searchState: false,
-    getSongs: (arg) => {
-        SC.get('/tracks', {
-            limit: model.songsLength,
-            //linked_partitioning: 1,
-            q: arg
-        }).then(function (tracks) {
-            model.songs = tracks;
-            // print using view
-            view.results.renderResults(model.songs);
-            model.recentSearch.push(searchValue);
-        });
-        model.searchState = true;
-        console.log(model.searchState, "got songs, changed state, pushed value, promise event");
-    },
-};
-
-const controller = {
-        renderInit: view.search.renderSearch(),
-        searchInput: document.getElementById("input"),
-        searchSubmitButton: document.getElementById("submit"),
-        id: 'EBquMMXE2x5ZxNs9UElOfb4HbvZK95rc',
-        init: () => {
-            SC.initialize({
-                client_id: controller.id
-            });
-
-            controller.searchSubmitButton.onclick = controller.submitSearch;
-            controller.searchInput.onkeypress = controller.keySearch;
-        },
-        submitSearch:
-            () => {
-                let searchValue = controller.searchInput.value;
-                if (model.searchState === false) {
-                    if (searchValue) {
-                        model.getSongs(searchValue);
-                    }
-                } else {
-                    controller.searchInput.value = "";
-                    model.searchState = false;
-                    console.log(model.searchState, "changed state, cleared value");
-                }
-            },
-        keySearch: (e) => {
-            if (e.keyCode === 13) {
-                controller.submitSearch();
-                return false;
-            }
-        }
+    return {
+        a1: a1,
+        b1: b1
     }
-;
-
-window.onload = controller.init;
+} 
