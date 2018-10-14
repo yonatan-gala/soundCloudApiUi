@@ -2,12 +2,23 @@
 
 // controller Constructor
 function Controller() {
-    const apiID = 'EBquMMXE2x5ZxNs9UElOfb4HbvZK95rc';
+    const apiID = 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg';
 
+    // checks
+    console.log("Model instance pre creation check");
     let myModel = new Model();
-    let submitValue;
 
+    // checks
+    console.log("Model instance post creation check");
+
+    let submitValue;
+    let inputValueChange;
     submitlistener();
+
+    //checks
+    console.log("Model Says submit button listener is initilized");
+
+    // API method
     SC.initialize({
         client_id: apiID
     });
@@ -17,12 +28,20 @@ function Controller() {
         let input = document.getElementById("input");
         let submitButton = document.getElementById("submit");
         //
-        submitButton.onclick = () => {
-            console.log(input.value);
-            submitValue = input.value;
-            myModel.resultsApiGet(submitValue);
-            submitValue = false;
-        }
+        submitButton.addEventListener('click', () => {
+            if (submitValue !== input.value) {
+                //checks
+                console.log("submit value is sent from controller listener to model:", submitValue);
+                submitValue = input.value;
+
+                //checks
+                console.log("Controler sent request to model for search results");
+                myModel.resultsApiGet(submitValue);
+
+                //for clearing i need to make search active avilable
+                //than if it is true, only than clear.
+            }
+        });
     }
 
     function keySearch() {
@@ -31,34 +50,59 @@ function Controller() {
     function navigateResults() {
 
     }
-
 }
-
 
 // model Contructor
 function Model() {
-    let myView = new View();
-    myView.callLayout()
     const resultDisplayLength = 6;
-    let resultApiArray = [];
+    let myView = new View();
+    // checks
+    console.log("model Says, view instance created");
+
+    myView.callLayout()
+
+    //checks
+    console.log("model Says, myView.callLayout is invoked");
+
+    let searchValue;
+    let searchState;
+
     let recentSearch = [];
-    let searchState = "";
-    let resultsPartitionCount = 0;
+
+    let resultApiArray = [];
+    let resultsPartitionCount = 1;
+
 
     // setter
 
-    // getter
-
     //methods
     function resultsApiGet(arg) {
+        searchValue = arg;
+        searchState = true;
+        recentSearch.push(searchValue);
+
+        //checks
+        console.log("model Says search value is: ", searchValue);
+        console.log("model Says search state is: ", searchState);
+        console.log("model Says recent search array is: ", recentSearch);
+
+        // API Promise
         SC.get('/tracks', {
             limit: resultDisplayLength,
+            linked_partitioning: resultsPartitionCount,
             q: arg
         }).then(function (tracks) {
             resultApiArray = tracks;
             myView.callResults(resultApiArray);
-            resultApiArray = "";
+
+            // checks
+            console.log("model Says array from API is:", resultApiArray);
         });
+    }
+
+    function clearResults() {
+      // this should make it all go away...
+
     }
 
     function resultsApiGetPratition(arg) {
@@ -79,12 +123,9 @@ function Model() {
 
     }
 
-    function clearResults() {
-        // clear results
-    }
-
     return {
-        resultsApiGet
+        resultsApiGet,
+        clearResults
     }
 }
 
@@ -100,34 +141,45 @@ function View() {
         return myTemplateGenerator.renderResults(arg);
     }
 
+    function resetResults() {
+
+    }
+
     return {
         callLayout,
-        callResults
+        callResults,
     };
 }
 
 // templateGenerator Constructor
 function TemplateGenerator() {
+    let resultsContainer = document.createElement('results');
+    resultsContainer.setAttribute('id', 'results');
+    const detail = document.createElement('detail');
+    detail.setAttribute('id', 'detail');
+
+    const master = document.createElement('master');
+    master.setAttribute('id', 'master');
+
+    const search = document.createElement('search');
+    search.setAttribute('id', 'search');
+
+    const input = document.createElement('input');
+    input.setAttribute('id', 'input');
+    input.setAttribute('placeholder', "search some shit");
+    input.className = "form-control";
+
+    const submit = document.createElement('button');
+    submit.setAttribute('id', 'submit');
+    submit.classList.add("btn", "btn--primary");
+    submit.innerText = "search";
+
+    let message = document.createElement('message');
+    message.innerText = "shit face";
+
     // methods
     function renderLayout() {
-        const detail = document.createElement('detail');
-        detail.setAttribute('id', 'detail');
 
-        const master = document.createElement('master');
-        master.setAttribute('id', 'master');
-
-        const search = document.createElement('search');
-        search.setAttribute('id', 'search');
-
-        const input = document.createElement('input');
-        input.setAttribute('id', 'input');
-        input.setAttribute('placeholder', "search some shit");
-        input.className = "form-control";
-
-        const submit = document.createElement('button');
-        submit.setAttribute('id', 'submit');
-        submit.classList.add("btn", "btn--primary");
-        submit.innerText = "search";
         document.getElementById('app').appendChild(detail);
         document.getElementById('app').appendChild(master);
         document.getElementById('detail').appendChild(search);
@@ -136,19 +188,15 @@ function TemplateGenerator() {
     }
 
     function renderResults(arg) {
-        let resultsContainer = document.createElement('results');
-        resultsContainer.setAttribute('id', 'results')
         document.getElementById('detail').appendChild(resultsContainer);
-        if (arg.length > 0) {
-            for (let i = 0; i < arg.length; i++) {
+        if (arg.collection.length > 0) {
+            for (let i = 0; i < arg.collection.length; i++) {
                 let result = document.createElement('results__item');
                 resultsContainer.appendChild(result);
-                result.innerText = arg[i].title;
+                result.innerText = arg.collection[i].title;
             }
         } else {
-            let message = document.createElement('message');
             resultsContainer.appendChild(message);
-            message.innerText = "shit face";
         }
     }
 
@@ -171,8 +219,8 @@ function TemplateGenerator() {
     function renderQueries() {
     }
 
-    function clearSearch() {
-        // remove results from Dom
+    function clearResults() {
+        console.log("rrrrrrrrrrrrrrrr");
     }
 
     function clearPreviewImage() {
@@ -181,18 +229,20 @@ function TemplateGenerator() {
 
     return {
         renderLayout,
-        renderResults
+        renderResults,
+        clearResults
     }
-}
-
-// events handler
-function eventListener() {
-
 }
 
 
 function init() {
+    //check
+    console.log("controller instance pre creation");
+
     let myController = new Controller();
+
+    //check
+    console.log("controller post creation");
 }
 
 window.onload = init;
