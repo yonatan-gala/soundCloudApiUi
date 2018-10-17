@@ -1,248 +1,366 @@
-"use strict";
+//"use strict";
+
+const staticString = {
+    SETTINGS: {
+        RESULTS_NUM: 6,
+        RECENT_RESULTS_NUM: 5
+    },
+    ELEMENT_HOOKS: {
+        ID: {
+            ROOT: 'app',
+            SEARCH_INPUT: 'searchInput',
+            SEARCH_BUTTON: 'searchButton',
+            PAGINATE_NEXT: 'paginateNext',
+            PAGINATE_PREV: 'paginatePrev',
+            PLAYER_PLAY: 'PlayerPlay',
+            PLAYER_STOP: 'PlayerStop',
+        },
+        CLASS: {
+            RESULTS_ITEM: 'results__item',
+        }
+    },
+    TEXT_STRINGS: {
+        INPUT_PLACEHOLDER: 'Search a song..',
+        MESSAGE_NO_RESULTS: 'No results found',
+        SUBMIT_TEXT: "Go"
+    },
+    SC: {
+        API_ID: 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg',
+    }
+};
 
 // controller Constructor
 function Controller() {
-    const apiID = 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg';
+    // the controller scope is:
+    // 1. API initialization
+    //   -  Id from constant string
+    //   -  SC, sound cloud SDK init.
+    // 2. Event management
+    //   - input
+    //   - submit
+    //   - result click
+    //   - preview image click
+    //   - recent search click
 
-    // checks
-    console.log("Model instance pre creation check");
+    // controller -> model
     let myModel = new Model();
+    let inputContainerValue = "";
+    detectSearchHandler();
 
-    // checks
-    console.log("Model instance post creation check");
+    // Handle Submit
+    function detectSearchHandler() {
+        let inputContainer = document.getElementById(staticString.ELEMENT_HOOKS.ID.SEARCH_INPUT);
+        let submitContainer = document.getElementById(staticString.ELEMENT_HOOKS.ID.SEARCH_BUTTON);
+        //inputContainer.addEventListener('focus', inputFocusHandler);
+        inputContainer.addEventListener('keypress', handleKeyPress);
+        submitContainer.addEventListener('click', handleSubmitButton);
 
-    let submitValue;
-    let inputValueChange;
-    submitlistener();
+        // function inputFocusHandler() {
+        //     if (inputContainerValue === inputContainer.value || inputContainerValue === "") {
+        //         console.log("no change");
+        //         submitContainer.setAttribute('disabled', 'disabled');
+        //     } else {
+        //         console.log("change");
+        //     }
+        // }
 
-    //checks
-    console.log("Model Says submit button listener is initilized");
+        // Handle submit
+        function handleSubmitButton() {
+            if (inputContainerValue != inputContainer.value) {
+                inputContainerValue = inputContainer.value;
+                submitSearch(inputContainer.value);
+            }
+        }
+
+        // Handle Key press
+        function handleKeyPress(e) {
+            if (e.keyCode === 13) {
+                submitContainer.click();
+            }
+        }
+
+        //staticString.ELEMENT_HOOKS.ID.SEARCH_INPUT.addEventListener('keypress',handleKeyPress(e));
+    }
+
+    // submit search
+    function submitSearch(arg) {
+        myModel.manageSearchState(arg);
+    }
+
+    // Handle Pagination
+    function handlePaginateNext() {
+    }
+
+    function handlePaginatePrev() {
+    }
+
+    // Handle Results navigation
+    function handleResultClick() {
+    }
+
+    // Handle PreviewClick
+    function handlePreviewClick() {
+    }
+
+    // Handle PLayer
+    function handlePlayerStop() {
+    }
+
+    function handlePlayerPlay() {
+    }
+
+}
+
+// model Constructor
+function Model() {
+    let songsApiArray = [];
+    let recentSearchArray = [];
+    let activeSearch = false;
+    let recentSearch = false;
+    let searchValue;
 
     // API method
     SC.initialize({
-        client_id: apiID
+        client_id: staticString.SC.API_ID
     });
-
-    function submitlistener() {
-        //todo:  these should be taken from the templateManager.
-        let input = document.getElementById("input");
-        let submitButton = document.getElementById("submit");
-        //
-        submitButton.addEventListener('click', () => {
-            if (submitValue !== input.value) {
-                //checks
-                console.log("submit value is sent from controller listener to model:", submitValue);
-                submitValue = input.value;
-
-                //checks
-                console.log("Controler sent request to model for search results");
-                myModel.resultsApiGet(submitValue);
-
-                //for clearing i need to make search active avilable
-                //than if it is true, only than clear.
-            }
-        });
-    }
-
-    function keySearch() {
-    }
-
-    function navigateResults() {
-
-    }
-}
-
-// model Contructor
-function Model() {
-    const resultDisplayLength = 6;
+    //calling model method
     let myView = new View();
-    // checks
-    console.log("model Says, view instance created");
 
-    myView.callLayout()
+    myView.detailView();
 
-    //checks
-    console.log("model Says, myView.callLayout is invoked");
+    //myView.removeResults();
+    function manageSearchState(arg) {
+        if (activeSearch === false) {
+            getSongs(arg);
+            activeSearch = true;
+        }
+        else {
+            myView.removeResults();
+            getSongs(arg);
+            activeSearch = true;
+        }
+    }
 
-    let searchValue;
-    let searchState;
-
-    let recentSearch = [];
-
-    let resultApiArray = [];
-    let resultsPartitionCount = 1;
-
-
-    // setter
-
-    //methods
-    function resultsApiGet(arg) {
-        searchValue = arg;
-        searchState = true;
-        recentSearch.push(searchValue);
-
-        //checks
-        console.log("model Says search value is: ", searchValue);
-        console.log("model Says search state is: ", searchState);
-        console.log("model Says recent search array is: ", recentSearch);
-
-        // API Promise
+    function getSongs(arg) {
         SC.get('/tracks', {
-            limit: resultDisplayLength,
-            linked_partitioning: resultsPartitionCount,
+            limit: staticString.SETTINGS.RESULTS_NUM,
             q: arg
         }).then(function (tracks) {
-            resultApiArray = tracks;
-            myView.callResults(resultApiArray);
-
-            // checks
-            console.log("model Says array from API is:", resultApiArray);
+            songsApiArray = tracks;
+            // print using view
+            myView.resultsView(songsApiArray);
+            manageRecentSearch(arg);
         });
     }
 
-    function clearResults() {
-      // this should make it all go away...
+    function getResultsPage(arg) {
+        // should clear recent search first if active is true
+        // if not , nothing to clear...
+
+        // navigate to  collection page
+        // this means calling with pagination ++ or -- in the linked  var
 
     }
 
-    function resultsApiGetPratition(arg) {
-        if (arg === "next") {
-            if (haveResults) {
-                // update partitionCounter
-                // go next
-                resultsPartitionCount++;
-                resutsApiGet()
-                // console.log("going next")
-            }
+    function storeRecentSong(arg) {
+        // get last result and push to an array
+    }
 
-        } else {
-            // go prev
-            resultsPartitionCount--;
-            resutsApiGet()
+    function manageRecentSearch(arg) {
+        if (recentSearch === false) {
+            myView.recentSearchView(recentSearchArray);
+            recentSearch = true;
+        }
+        else {
+
+            activeSearch = true;
         }
 
+        if (recentSearchArray.length < 6) {
+            recentSearchArray.push(arg);
+        } else {
+            recentSearchArray.shift();
+            recentSearchArray.push(arg);
+        }
+        myView.recentSearchView(recentSearchArray);
+
+    }
+
+    function getPreview(arg) {
+        //prepare data for preview
+        //call preview View
     }
 
     return {
-        resultsApiGet,
-        clearResults
+        manageSearchState
     }
 }
 
 // view Constructor
 function View() {
-    let myTemplateGenerator = new TemplateGenerator();
-
-    function callLayout() {
-        return myTemplateGenerator.renderLayout();
-    }
-
-    function callResults(arg) {
-        return myTemplateGenerator.renderResults(arg);
-    }
-
-    function resetResults() {
-
-    }
-
-    return {
-        callLayout,
-        callResults,
+    let rootElementsIds = {
+        root: staticString.ELEMENT_HOOKS.ID.ROOT,
+        detail: 'detail',
+        detailResults: 'detailResults',
+        detailRecent: 'detailRecent',
+        master: 'master',
+        results: 'results',
+        preview: 'preview',
+        player: 'player'
     };
-}
 
-// templateGenerator Constructor
-function TemplateGenerator() {
-    let resultsContainer = document.createElement('results');
-    resultsContainer.setAttribute('id', 'results');
-    const detail = document.createElement('detail');
-    detail.setAttribute('id', 'detail');
+    function detailView(arg = null) {
+        let template = {
+            id: 'detail',
+            element: 'detail',
+            results:{
+                id: 'detailResults',
+                element: 'detail__results'
+            },
+            pagination:{
+            },
+            recent:{
+                id: 'detailRecent',
+                element: 'detail__recent'
+            }
+        };
+        let container = document.createElement(template.element);
+        let containerResults = document.createElement(template.results.element);
+        let containerRecent = document.createElement(template.recent.element);
 
-    const master = document.createElement('master');
-    master.setAttribute('id', 'master');
+        container.setAttribute('id', template.id);
+        containerResults.setAttribute('id', template.results.id);
+        containerRecent.setAttribute('id', template.recent.id);
 
-    const search = document.createElement('search');
-    search.setAttribute('id', 'search');
+        document.getElementById(rootElementsIds.root).appendChild(container);
 
-    const input = document.createElement('input');
-    input.setAttribute('id', 'input');
-    input.setAttribute('placeholder', "search some shit");
-    input.className = "form-control";
+        searchView();
 
-    const submit = document.createElement('button');
-    submit.setAttribute('id', 'submit');
-    submit.classList.add("btn", "btn--primary");
-    submit.innerText = "search";
-
-    let message = document.createElement('message');
-    message.innerText = "shit face";
-
-    // methods
-    function renderLayout() {
-
-        document.getElementById('app').appendChild(detail);
-        document.getElementById('app').appendChild(master);
-        document.getElementById('detail').appendChild(search);
-        document.getElementById('search').appendChild(input);
-        document.getElementById('search').appendChild(submit);
+        document.getElementById(template.id).appendChild(containerResults);
+        document.getElementById(template.id).appendChild(containerRecent);
     }
 
-    function renderResults(arg) {
-        document.getElementById('detail').appendChild(resultsContainer);
-        if (arg.collection.length > 0) {
-            for (let i = 0; i < arg.collection.length; i++) {
-                let result = document.createElement('results__item');
-                resultsContainer.appendChild(result);
-                result.innerText = arg.collection[i].title;
+    function searchView() {
+        let template = {
+            id: 'search',
+            element: 'search',
+            input: {
+                element: 'input',
+                id: staticString.ELEMENT_HOOKS.ID.SEARCH_INPUT,
+                class: "form-control",
+                placeholderText: staticString.TEXT_STRINGS.INPUT_PLACEHOLDER
+            },
+            button: {
+                element: 'button',
+                id: staticString.ELEMENT_HOOKS.ID.SEARCH_BUTTON,
+                class: "btn",
+                text: staticString.TEXT_STRINGS.SUBMIT_TEXT
             }
-        } else {
-            resultsContainer.appendChild(message);
+        };
+        let container = document.createElement(template.element);
+        let containerInput = document.createElement(template.input.element);
+        let containerButton = document.createElement(template.button.element);
+
+        container.setAttribute('id', template.id);
+        containerInput.setAttribute('id', template.input.id);
+        containerInput.setAttribute('placeholder', template.input.placeholderText);
+        containerInput.className = template.input.class;
+        containerButton.setAttribute('id', template.button.id);
+        containerButton.className = template.button.class;
+        containerButton.innerText = template.button.text;
+
+        document.getElementById(rootElementsIds.detail).appendChild(container);
+        document.getElementById(template.id).appendChild(containerInput);
+        document.getElementById(template.id).appendChild(containerButton);
+    }
+
+    function resultsView(arg) {
+        let template = {
+            id: rootElementsIds.results,
+            element: 'results',
+            class: "results",
+            item: {
+                element: 'results__item',
+                class: "results__item"
+            }
+        };
+        let container = document.createElement(template.element);
+
+        container.setAttribute('id', template.id);
+        container.setAttribute('class', template.class);
+        document.getElementById(rootElementsIds.detailResults).appendChild(container);
+        for (let i = 0; i < arg.length; i++) {
+            let containerItem = document.createElement(template.item.element);
+            containerItem.setAttribute('class', template.item.class);
+            document.getElementById(template.id).appendChild(containerItem);
+            containerItem.innerText = arg[i].title;
         }
     }
 
-    function renderNextPagination() {
-        // render pagination Next button
+    function removeResults() {
+        const container = document.getElementById('results');
+        container.remove();
     }
 
-    function renderPrevPagination() {
-        // render pagination Prev button
+    function recentSearchView(arg) {
+        let template = {
+            id: 'recentSearch',
+            element: 'recentSearch',
+            class: "pagination",
+            item: {
+                element: 'recentSearch__item',
+                class: "pagination__item"
+            }
+        };
+        let container = document.createElement(template.element);
+
+        container.setAttribute('id', template.id);
+        document.getElementById(rootElementsIds.detailRecent).appendChild(container);
+        for (let i = 0; i < arg.length; i++) {
+            let containerItem = document.createElement(template.item.element);
+            containerItem.setAttribute('class', template.item.class);
+            document.getElementById(template.id).appendChild(containerItem);
+            containerItem.innerText = arg[i];
+        }
     }
 
-    function renderPreviewImage() {
-        // clicked result image
+    function paginationView() {
     }
 
-    function renderTrackPlayer() {
-        //
+    function masterView() {
+        let container = document.createElement(regComponents.master.element);
+        container.setAttribute('id', regComponents.detail.id);
+        document.getElementById(regComponentsIds.root).appendChild(container);
     }
 
-    function renderQueries() {
+    function previewView() {
+
     }
 
-    function clearResults() {
-        console.log("rrrrrrrrrrrrrrrr");
+    function previewImageView() {
+
     }
 
-    function clearPreviewImage() {
-        //  default image for a new search state
+    function playerView() {
+
     }
 
     return {
-        renderLayout,
-        renderResults,
-        clearResults
-    }
+        detailView,
+        searchView,
+        resultsView,
+        recentSearchView,
+        masterView,
+        previewView,
+        previewImageView,
+        playerView,
+        removeResults
+    };
 }
 
-
+// Event Handlers
 function init() {
-    //check
-    console.log("controller instance pre creation");
-
     let myController = new Controller();
-
-    //check
-    console.log("controller post creation");
 }
 
 window.onload = init;
