@@ -167,15 +167,6 @@ function Model() {
     }
 
     function manageRecentSearch(arg) {
-        if (recentSearch === false) {
-            myView.recentSearchView(recentSearchArray);
-            recentSearch = true;
-        }
-        else {
-
-            activeSearch = true;
-        }
-
         if (recentSearchArray.length < 6) {
             recentSearchArray.push(arg);
         } else {
@@ -183,7 +174,6 @@ function Model() {
             recentSearchArray.push(arg);
         }
         myView.recentSearchView(recentSearchArray);
-
     }
 
     function getPreview(arg) {
@@ -212,16 +202,15 @@ function View() {
     function detailView(arg = null) {
         let template = {
             id: 'detail',
-            element: 'detail',
-            results:{
+            element: 'div',
+            results: {
                 id: 'detailResults',
-                element: 'detail__results'
+                element: 'div'
             },
-            pagination:{
-            },
-            recent:{
+            pagination: {},
+            recent: {
                 id: 'detailRecent',
-                element: 'detail__recent'
+                element: 'div'
             }
         };
         let container = document.createElement(template.element);
@@ -243,7 +232,7 @@ function View() {
     function searchView() {
         let template = {
             id: 'search',
-            element: 'search',
+            element: 'div',
             input: {
                 element: 'input',
                 id: staticString.ELEMENT_HOOKS.ID.SEARCH_INPUT,
@@ -277,10 +266,10 @@ function View() {
     function resultsView(arg) {
         let template = {
             id: rootElementsIds.results,
-            element: 'results',
+            element: 'div',
             class: "results",
             item: {
-                element: 'results__item',
+                element: 'div',
                 class: "results__item"
             }
         };
@@ -305,22 +294,39 @@ function View() {
     function recentSearchView(arg) {
         let template = {
             id: 'recentSearch',
-            element: 'recentSearch',
-            class: "pagination",
+            element: 'div',
+            class: "results",
             item: {
-                element: 'recentSearch__item',
-                class: "pagination__item"
+                element: 'div',
+                class: "results__item"
             }
         };
-        let container = document.createElement(template.element);
+        if (arg.length === 1) {
+            let container = document.createElement(template.element);
+            container.setAttribute('id', template.id);
+            document.getElementById(rootElementsIds.detailRecent).appendChild(container);
 
-        container.setAttribute('id', template.id);
-        document.getElementById(rootElementsIds.detailRecent).appendChild(container);
-        for (let i = 0; i < arg.length; i++) {
             let containerItem = document.createElement(template.item.element);
             containerItem.setAttribute('class', template.item.class);
             document.getElementById(template.id).appendChild(containerItem);
-            containerItem.innerText = arg[i];
+            containerItem.innerText = arg[0];
+            console.log(arg);
+
+        } else if(arg.length < 6){
+            let containerItem = document.createElement(template.item.element);
+            containerItem.setAttribute('class', template.item.class);
+            document.getElementById(template.id).appendChild(containerItem);
+            containerItem.innerText = arg[arg.length-1];
+            console.log(arg);
+
+        } else {
+            let parentContainer = document.getElementById(template.id);
+            parentContainer.removeChild(parentContainer.getElementsByTagName(template.item.element)[0]);
+            let containerItem = document.createElement(template.item.element);
+            containerItem.setAttribute('class', template.item.class);
+            document.getElementById(template.id).appendChild(containerItem);
+            containerItem.innerText = arg[arg.length-1];
+            console.log(arg);
         }
     }
 
