@@ -1,74 +1,81 @@
 //"use strict";
 
-const staticString = {
-    SETTINGS: {
-        RESULTS_NUM: 6,
-        RECENT_RESULTS_NUM: 5
+const resultsNum = 6;
+const recentResultsNum = 5;
+const apiId = 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg';
+
+let activeSearch = false;
+let recentSearch = false;
+let inputContainerValue = "";
+let songsApiArray = [];
+let recentSearchArray = [];
+let searchValue;
+
+const text = {
+    INPUT_PLACEHOLDER: 'Search a song..',
+    MESSAGE_NO_RESULTS: 'No results found',
+    SUBMIT_TEXT: "Go",
+    RECENT_RESULTS_TITLE: "Recent results"
+};
+
+const root = 'app';
+
+
+const templates = {
+    ROOT: 'app',
+    DETAIL: {
+        ID_HOOK: 'detail',
     },
-    ELEMENT_HOOKS: {
-        ID: {
-            ROOT: 'app',
-            SEARCH_INPUT: 'searchInput',
-            SEARCH_BUTTON: 'searchButton',
-            PAGINATE_NEXT: 'paginateNext',
-            PAGINATE_PREV: 'paginatePrev',
-            PLAYER_PLAY: 'PlayerPlay',
-            PLAYER_STOP: 'PlayerStop',
-        },
-        CLASS: {
-            RESULTS_ITEM: 'results__item',
-        }
+    SEARCH: {
+        ID_HOOK: 'search',
     },
-    TEXT_STRINGS: {
-        INPUT_PLACEHOLDER: 'Search a song..',
-        MESSAGE_NO_RESULTS: 'No results found',
-        SUBMIT_TEXT: "Go"
+    SEARCH_INPUT: {
+        ID_HOOK: 'searchInput',
     },
-    SC: {
-        API_ID: 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg',
+    SEARCH_BUTTON: {
+        ID_HOOK: 'searchButton'
+    },
+    RESULTS: {
+        ID_HOOK: 'results'
+    },
+    RESULTS_ITEM: {
+        CLASS_HOOK: ['results__item']
+    },
+    RECENT: {
+        ID_HOOK: 'recentResults'
+    },
+    RECENT_ITEM: {
+        CLASS_HOOK: 'results__item'
+    },
+    MASTER: {
+        ID_HOOK: 'master'
+    },
+    PREVIEW: {
+        ID_HOOK: 'preview'
+    },
+    PLAYER: {
+        ID_HOOK: 'player'
     }
 };
 
-// controller Constructor
-function Controller() {
-    // the controller scope is:
-    // 1. API initialization
-    //   -  Id from constant string
-    //   -  SC, sound cloud SDK init.
-    // 2. Event management
-    //   - input
-    //   - submit
-    //   - result click
-    //   - preview image click
-    //   - recent search click
+function EventDetector() {
+    let myEventManager = new EventManager();
 
-    // controller -> model
-    let myModel = new Model();
-    let inputContainerValue = "";
     detectSearchHandler();
 
     // Handle Submit
     function detectSearchHandler() {
-        let inputContainer = document.getElementById(staticString.ELEMENT_HOOKS.ID.SEARCH_INPUT);
-        let submitContainer = document.getElementById(staticString.ELEMENT_HOOKS.ID.SEARCH_BUTTON);
-        //inputContainer.addEventListener('focus', inputFocusHandler);
+        let inputContainer = document.getElementById(templates.SEARCH_INPUT.ID_HOOK);
+        let submitContainer = document.getElementById(templates.SEARCH_BUTTON.ID_HOOK);
+
         inputContainer.addEventListener('keypress', handleKeyPress);
         submitContainer.addEventListener('click', handleSubmitButton);
-
-        // function inputFocusHandler() {
-        //     if (inputContainerValue === inputContainer.value || inputContainerValue === "") {
-        //         console.log("no change");
-        //         submitContainer.setAttribute('disabled', 'disabled');
-        //     } else {
-        //         console.log("change");
-        //     }
-        // }
 
         // Handle submit
         function handleSubmitButton() {
             if (inputContainerValue != inputContainer.value) {
                 inputContainerValue = inputContainer.value;
-                submitSearch(inputContainer.value);
+                sendSubmitEvent(inputContainer.value);
             }
         }
 
@@ -78,13 +85,11 @@ function Controller() {
                 submitContainer.click();
             }
         }
-
-        //staticString.ELEMENT_HOOKS.ID.SEARCH_INPUT.addEventListener('keypress',handleKeyPress(e));
     }
 
     // submit search
-    function submitSearch(arg) {
-        myModel.manageSearchState(arg);
+    function sendSubmitEvent(arg) {
+        myEventManager.manageSearchState(arg);
     }
 
     // Handle Pagination
@@ -109,33 +114,31 @@ function Controller() {
     function handlePlayerPlay() {
     }
 
+    return {
+        handlePaginateNext,
+        handlePaginatePrev,
+        handleResultClick,
+        handlePreviewClick,
+        handlePlayerStop,
+        handlePlayerPlay
+    }
 }
 
 // model Constructor
-function Model() {
-    let songsApiArray = [];
-    let recentSearchArray = [];
-    let activeSearch = false;
-    let recentSearch = false;
-    let searchValue;
-
-    // API method
-    SC.initialize({
-        client_id: staticString.SC.API_ID
-    });
+function EventManager() {
     //calling model method
-    let myView = new View();
+    let myTemplateEngine = new TemplateEngine();
 
-    myView.detailView();
+    myTemplateEngine.detailTemplate();
 
-    //myView.removeResults();
+    //myEventManager.removeResults();
     function manageSearchState(arg) {
         if (activeSearch === false) {
             getSongs(arg);
             activeSearch = true;
         }
         else {
-            myView.removeResults();
+            myTemplateEngine.removeResults();
             getSongs(arg);
             activeSearch = true;
         }
@@ -143,12 +146,12 @@ function Model() {
 
     function getSongs(arg) {
         SC.get('/tracks', {
-            limit: staticString.SETTINGS.RESULTS_NUM,
+            limit: resultsNum,
             q: arg
         }).then(function (tracks) {
             songsApiArray = tracks;
-            // print using view
-            myView.resultsView(songsApiArray);
+
+            myTemplateEngine.resultsTemplate(songsApiArray);
             manageRecentSearch(arg);
         });
     }
@@ -167,13 +170,13 @@ function Model() {
     }
 
     function manageRecentSearch(arg) {
-        if (recentSearchArray.length < 6) {
+        if (recentSearchArray.length < recentResultsNum) {
             recentSearchArray.push(arg);
         } else {
             recentSearchArray.shift();
             recentSearchArray.push(arg);
         }
-        myView.recentSearchView(recentSearchArray);
+        myTemplateEngine.recentSearchTemplate(recentSearchArray);
     }
 
     function getPreview(arg) {
@@ -187,186 +190,120 @@ function Model() {
 }
 
 // view Constructor
-function View() {
-    let rootElementsIds = {
-        root: staticString.ELEMENT_HOOKS.ID.ROOT,
-        detail: 'detail',
-        detailResults: 'detailResults',
-        detailRecent: 'detailRecent',
-        master: 'master',
-        results: 'results',
-        preview: 'preview',
-        player: 'player'
-    };
+function TemplateEngine() {
+    function detailTemplate() {
+        let container = document.createElement('div');
 
-    function detailView(arg = null) {
-        let template = {
-            id: 'detail',
-            element: 'div',
-            results: {
-                id: 'detailResults',
-                element: 'div'
-            },
-            pagination: {},
-            recent: {
-                id: 'detailRecent',
-                element: 'div'
-            }
-        };
-        let container = document.createElement(template.element);
-        let containerResults = document.createElement(template.results.element);
-        let containerRecent = document.createElement(template.recent.element);
+        container.setAttribute('id', templates.DETAIL.ID_HOOK);
 
-        container.setAttribute('id', template.id);
-        containerResults.setAttribute('id', template.results.id);
-        containerRecent.setAttribute('id', template.recent.id);
+        document.getElementById(templates.ROOT).appendChild(container);
 
-        document.getElementById(rootElementsIds.root).appendChild(container);
-
-        searchView();
-
-        document.getElementById(template.id).appendChild(containerResults);
-        document.getElementById(template.id).appendChild(containerRecent);
+        searchTemplate();
     }
 
-    function searchView() {
-        let template = {
-            id: 'search',
-            element: 'div',
-            input: {
-                element: 'input',
-                id: staticString.ELEMENT_HOOKS.ID.SEARCH_INPUT,
-                class: "form-control",
-                placeholderText: staticString.TEXT_STRINGS.INPUT_PLACEHOLDER
-            },
-            button: {
-                element: 'button',
-                id: staticString.ELEMENT_HOOKS.ID.SEARCH_BUTTON,
-                class: "btn",
-                text: staticString.TEXT_STRINGS.SUBMIT_TEXT
-            }
-        };
-        let container = document.createElement(template.element);
-        let containerInput = document.createElement(template.input.element);
-        let containerButton = document.createElement(template.button.element);
+    function searchTemplate() {
+        let container = document.createElement('div');
+        let containerInput = document.createElement('input');
+        let containerButton = document.createElement('button');
 
-        container.setAttribute('id', template.id);
-        containerInput.setAttribute('id', template.input.id);
-        containerInput.setAttribute('placeholder', template.input.placeholderText);
-        containerInput.className = template.input.class;
-        containerButton.setAttribute('id', template.button.id);
-        containerButton.className = template.button.class;
-        containerButton.innerText = template.button.text;
+        container.setAttribute('id', templates.SEARCH.ID_HOOK);
 
-        document.getElementById(rootElementsIds.detail).appendChild(container);
-        document.getElementById(template.id).appendChild(containerInput);
-        document.getElementById(template.id).appendChild(containerButton);
+        containerInput.setAttribute('id', templates.SEARCH_INPUT.ID_HOOK);
+        containerInput.setAttribute('placeholder', text.INPUT_PLACEHOLDER);
+        containerInput.className = "form-control";
+
+        containerButton.setAttribute('id', templates.SEARCH_BUTTON.ID_HOOK);
+        containerButton.className = "btn";
+        containerButton.innerText = text.SUBMIT_TEXT;
+
+        document.getElementById(templates.DETAIL.ID_HOOK).appendChild(container);
+        document.getElementById(templates.SEARCH.ID_HOOK).appendChild(containerInput);
+        document.getElementById(templates.SEARCH.ID_HOOK).appendChild(containerButton);
     }
 
-    function resultsView(arg) {
-        let template = {
-            id: rootElementsIds.results,
-            element: 'div',
-            class: "results",
-            item: {
-                element: 'div',
-                class: "results__item"
-            }
-        };
-        let container = document.createElement(template.element);
-
-        container.setAttribute('id', template.id);
-        container.setAttribute('class', template.class);
-        document.getElementById(rootElementsIds.detailResults).appendChild(container);
+    function resultsTemplate(arg) {
+        let container = document.createElement('div');
+        container.setAttribute('id', templates.RESULTS.ID_HOOK);
+        container.className = "results";
+        document.getElementById(templates.DETAIL.ID_HOOK).appendChild(container);
         for (let i = 0; i < arg.length; i++) {
-            let containerItem = document.createElement(template.item.element);
-            containerItem.setAttribute('class', template.item.class);
-            document.getElementById(template.id).appendChild(containerItem);
+            let containerItem = document.createElement('div');
+            containerItem.className = "results__item";
+            document.getElementById(templates.RESULTS.ID_HOOK).appendChild(containerItem);
             containerItem.innerText = arg[i].title;
         }
     }
 
     function removeResults() {
-        const container = document.getElementById('results');
+        const container = document.getElementById(templates.RESULTS.ID_HOOK);
         container.remove();
     }
 
-    function recentSearchView(arg) {
-        let template = {
-            id: 'recentSearch',
-            element: 'div',
-            class: "results",
-            item: {
-                element: 'div',
-                class: "results__item"
-            }
-        };
+    function recentSearchTemplate(arg) {
         if (arg.length === 1) {
-            let container = document.createElement(template.element);
-            container.setAttribute('id', template.id);
-            document.getElementById(rootElementsIds.detailRecent).appendChild(container);
+            let container = document.createElement('div');
+            container.setAttribute('id', templates.RECENT.ID_HOOK);
+            document.getElementById(templates.ROOT).appendChild(container);
 
-            let containerItem = document.createElement(template.item.element);
-            containerItem.setAttribute('class', template.item.class);
-            document.getElementById(template.id).appendChild(containerItem);
+            let containerItem = document.createElement('div');
+            containerItem.className = "results__item";
+            document.getElementById(templates.RECENT.ID_HOOK).appendChild(containerItem);
             containerItem.innerText = arg[0];
-            console.log(arg);
-
-        } else if(arg.length < 6){
-            let containerItem = document.createElement(template.item.element);
-            containerItem.setAttribute('class', template.item.class);
-            document.getElementById(template.id).appendChild(containerItem);
-            containerItem.innerText = arg[arg.length-1];
-            console.log(arg);
 
         } else {
-            let parentContainer = document.getElementById(template.id);
-            parentContainer.removeChild(parentContainer.getElementsByTagName(template.item.element)[0]);
-            let containerItem = document.createElement(template.item.element);
-            containerItem.setAttribute('class', template.item.class);
-            document.getElementById(template.id).appendChild(containerItem);
-            containerItem.innerText = arg[arg.length-1];
-            console.log(arg);
+            let containerItem = document.createElement('div');
+            containerItem.className = "results__item";
+            containerItem.innerText = arg[arg.length - 1];
+            if (arg.length < recentResultsNum) {
+                document.getElementById(templates.RECENT.ID_HOOK).appendChild(containerItem);
+            } else {
+                templates.RECENT.removeChild(templates.RECENT.ID_HOOK.getElementsByTagName('div')[0]);
+                document.getElementById(template.RECENT.ID_HOOK).appendChild(containerItem);
+            }
         }
     }
 
-    function paginationView() {
+    function paginationTemplate() {
     }
 
-    function masterView() {
-        let container = document.createElement(regComponents.master.element);
-        container.setAttribute('id', regComponents.detail.id);
-        document.getElementById(regComponentsIds.root).appendChild(container);
+    function masterTemplate() {
+        let container = document.createElement('div');
+        container.setAttribute('id', templates.MASTER);
+        document.getElementById(root).appendChild(container);
     }
 
-    function previewView() {
-
-    }
-
-    function previewImageView() {
+    function previewTemplate() {
 
     }
 
-    function playerView() {
+    function previewImageTemplate() {
+
+    }
+
+    function playerTemplate() {
 
     }
 
     return {
-        detailView,
-        searchView,
-        resultsView,
-        recentSearchView,
-        masterView,
-        previewView,
-        previewImageView,
-        playerView,
+        detailTemplate,
+        searchTemplate,
+        resultsTemplate,
+        recentSearchTemplate,
+        masterTemplate,
+        previewTemplate,
+        previewTemplate,
+        playerTemplate,
         removeResults
     };
 }
 
 // Event Handlers
 function init() {
-    let myController = new Controller();
+    // API method
+    SC.initialize({
+        client_id: apiId
+    });
+    let myEventDetector = new EventDetector();
 }
 
 window.onload = init;
