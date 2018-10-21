@@ -3,12 +3,15 @@
 var gulp = require('gulp'),
     connect = require('gulp-connect'),
     sass = require('gulp-sass'),
-    sassLint = require('gulp-sass-lint');
+    sassLint = require('gulp-sass-lint'),
+    sourcemaps = require('gulp-sourcemaps');
 
 
 gulp.task('sass', function () {
     return gulp.src('./styles/**/*.scss')
+        .pipe(sourcemaps.init())
         .pipe(sass().on('error', sass.logError))
+        .pipe(sourcemaps.write())
         .pipe(gulp.dest('./css'));
 });
 

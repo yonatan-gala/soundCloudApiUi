@@ -1,0 +1,16 @@
+// font-face configurator
+// dependency '$fontpath' should be configured.
+// @params:$family, $variant, $weight, $style
+// -- $family: name of the configured font-family.
+// -- $variant: font-variation, this will cascade to the src's.
+// -- $weight: font-weight, optional
+// -- $style: font-style, optional
+
+@mixin font-face($family, $variant, $weight:normal, $style: normal) {
+  font-family: $family;
+  src: local("#{$family $variant}"), local("#{$family}"+"-#{$variant}"),
+  url("#{$fontpath}#{$family}-#{$variant}.woff2") format("woff2"),
+  url("#{$fontpath}#{$family}-#{$variant}.woff") format("woff");
+  font-weight: $weight;
+  font-style: $style;
+}

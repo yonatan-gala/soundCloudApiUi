@@ -1,0 +1,32 @@
+.app {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100vh;
+}
+
+.master,
+.detail {
+  flex-basis: 50%;
+  width: 50%;
+}
+
+.master {
+  background-color: $brand-secondary;
+  background-image: url(../images/Soundcloud.svg);
+  background-repeat: no-repeat;
+  background-size: 20rem;
+  background-position: 50% 8rem;
+}
+
+.detail {
+  //background-color: red;
+}
+
+.recent {
+  flex-basis: 100%;
+  border-top: 2px solid $type-color-highlight;
+}
+
+.master, .detail, .recent {
+  padding: ($spacing * 2);
+}

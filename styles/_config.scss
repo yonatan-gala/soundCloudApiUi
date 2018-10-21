@@ -1,1 +1,22 @@
-$test: red;
+$primary-font-family: 'Overpass';
+
+$font-size-base: 1.2rem;
+$font-size-type: 1.5rem;
+$font-size-title: 1.8rem;
+
+$font-black: 900;
+$font-light: 300;
+$font-bold: 700;
+
+$fontpath: '../fonts/';
+
+$brand-secondary: #f2f2f2;
+$brand-primary: #f50;
+
+$type-color-base: #333;
+$type-color-light: #999;
+$type-color-highlight: $brand-primary;
+
+$spacing: 1rem;
+
+$global-line-height: 1.2;

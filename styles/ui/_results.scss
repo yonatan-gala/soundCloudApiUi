@@ -1,0 +1,29 @@
+.results {
+  padding: ($spacing * 2) 0;
+  &__item {
+    font-size: $font-size-type;
+    line-height: $global-line-height;
+    padding: $spacing ($spacing / 2);
+    cursor: pointer;
+    &--default {
+      &:hover, &:active, &:focus {
+        color: $type-color-highlight;
+      }
+    }
+    &--recent {
+      background-color: $brand-secondary;
+      color: $type-color-light;
+      margin-bottom: ($spacing / 2);
+      &:hover,
+      &:active,
+      &:focus {
+        color: $type-color-base;
+      }
+    }
+  }
+  &__item-title {
+    font-size: 2rem;
+    color: $type-color-base;
+    margin-bottom: $spacing;
+  }
+}

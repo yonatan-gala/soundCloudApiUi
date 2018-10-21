@@ -1,0 +1,40 @@
+// scaffolding baseline.
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 62.5%;
+}
+
+body {
+  font-size: 16px;
+  font-family: $primary-font-family, sans-serif;
+}
+
+input, button {
+  box-shadow: none;
+  border: 0;
+  outline: 0;
+}
+
+input {
+  font-family: inherit;
+}
+
+@font-face {
+  @include font-face(Overpass, Regular);
+}
+
+@font-face {
+  @include font-face(Overpass, Black, $font-black);
+}
+
+@font-face {
+  @include font-face(Overpass, Bold, $font-bold);
+}
+
+@font-face {
+  @include font-face(Overpass, Light, $font-light);
+}
