@@ -265,6 +265,7 @@
             for (let i = 0; i < resultsArrayAsParam.length; i++) {
                 let containerItem = document.createElement('div');
                 containerItem.classList.add('results__item', 'results__item--default');
+                containerItem.setAttribute('onclick', "myFunction(this)");
                 resultsIdNode = resultsIdNode || document.getElementById(templates.RESULTS.ID_HOOK);
                 resultsIdNode.appendChild(containerItem);
                 containerItem.setAttribute('id', resultsArrayAsParam[i].id);
@@ -374,5 +375,14 @@
     }
 
     window.onload = init;
+
+    function test() {
+        console.log("test");
+    }
+
 })();
 
+
+function myFunction(d) {
+    console.log(d.getAttribute('id'));
+}
