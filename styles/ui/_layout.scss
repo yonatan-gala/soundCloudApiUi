@@ -1,32 +1,35 @@
+$app-master-image-bg-position: 8rem;
+$app-master-bg: $primary-logo;
+$app-master-bg-size: 20rem;
+$app-recent-border: 2px solid $type-color-highlight;
+
 .app {
   display: flex;
   flex-wrap: wrap;
   min-height: 100vh;
+  &__master,
+  &__detail {
+    flex-basis: 50%;
+    width: 50%;
+  }
+
+  &__master {
+    background-color: $brand-secondary;
+    background-image: url($imagepath + $app-master-bg);
+    background-repeat: no-repeat;
+    background-size: $app-master-bg-size;
+    background-position: 50% $app-master-image-bg-position;
+  }
+
+  &__recent {
+    flex-basis: 100%;
+    border-top: $app-recent-border;
+  }
+
+  &__master,
+  &__detail,
+  &__recent {
+    padding: ($spacing * 2);
+  }
 }
 
-.master,
-.detail {
-  flex-basis: 50%;
-  width: 50%;
-}
-
-.master {
-  background-color: $brand-secondary;
-  background-image: url(../images/Soundcloud.svg);
-  background-repeat: no-repeat;
-  background-size: 20rem;
-  background-position: 50% 8rem;
-}
-
-.detail {
-  //background-color: red;
-}
-
-.recent {
-  flex-basis: 100%;
-  border-top: 2px solid $type-color-highlight;
-}
-
-.master, .detail, .recent {
-  padding: ($spacing * 2);
-}

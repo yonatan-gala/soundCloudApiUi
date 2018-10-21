@@ -10,7 +10,7 @@ html {
 
 body {
   font-size: 16px;
-  font-family: $primary-font-family, sans-serif;
+  font-family: $primary-font-family, $fallback-font-family;
 }
 
 input, button {

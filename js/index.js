@@ -7,10 +7,11 @@
 
     let activeSearch = false;
     let recentSearch = false;
+    let recentResults = false;
 
     let songsApiArray = [];
-    let recentSearchArray = []
-    ;
+    let recentSearchArray = [];
+
     let inputContainerValue;
     let searchValue;
 
@@ -113,42 +114,28 @@
             myEventManager.updateResultBaseOnSearchState(capturedInputValue);
         }
 
-        // Handle Pagination
-        function handlePaginateNext() {
+        function triggerRecentItemClickEvent(d) {
+            myEventManager.manageRecentItemClick(d.innerHTML);
         }
 
-        function handlePaginatePrev() {
+        function triggerResultItemClickEvent(d) {
+            myEventManager.manageResultItemClick(d.getAttribute('id'));
         }
 
-        // Handle Results navigation
-        function handleResultClick() {
-        }
+        window.triggerResultItemClickEvent = triggerResultItemClickEvent;
+        window.triggerRecentItemClickEvent = triggerRecentItemClickEvent;
 
-        // Handle PreviewClick
-        function handlePreviewClick() {
-        }
-
-        // Handle PLayer
-        function handlePlayerStop() {
-        }
-
-        function handlePlayerPlay() {
-        }
-
-        return {
-            handlePaginateNext,
-            handlePaginatePrev,
-            handleResultClick,
-            handlePreviewClick,
-            handlePlayerStop,
-            handlePlayerPlay
-        }
     }
 
     function EventManager() {
         let myTemplateEngine = new TemplateEngine();
         myTemplateEngine.detailTemplate();
         myTemplateEngine.masterTemplate();
+
+        if (localStorage["recentSearchArray"]) {
+            recentSearchArray = JSON.parse(localStorage.getItem("recentSearchArray"));
+            myTemplateEngine.recentSearchTemplate(recentSearchArray);
+        }
 
         /**
          * Decide if to remove last result from the ui
@@ -202,15 +189,29 @@
                     recentSearchArray.push(query);
                 }
             }
+            localStorage.setItem("recentSearchArray", JSON.stringify(recentSearchArray));
             myTemplateEngine.recentSearchTemplate(recentSearchArray);
         }
 
+
+        //todo: name should change (search recent)
+        function manageRecentItemClick(capturedRecentItemQueryData) {
+            console.log(capturedRecentItemQueryData);
+        }
+
+        //todo: name should change (preiview item)
+        function manageResultItemClick(capturedResultItemID) {
+            console.log(capturedResultItemID);
+        }
+
         //TODO : pagination
-        //TODO : store recent songs
         //TODO: preview
+        //TODO: player
 
         return {
-            updateResultBaseOnSearchState
+            updateResultBaseOnSearchState,
+            manageRecentItemClick,
+            manageResultItemClick
         }
     }
 
@@ -219,11 +220,19 @@
         function detailTemplate() {
             const container = document.createElement('div');
             container.setAttribute('id', templates.DETAIL.ID_HOOK);
-            container.className = "detail";
+            container.className = "app__detail";
             rootIdNode = rootIdNode || document.getElementById(templates.ROOT);
             rootIdNode.appendChild(container);
 
             searchTemplate();
+        }
+
+        function masterTemplate() {
+            let container = document.createElement('div');
+            container.setAttribute('id', templates.MASTER.ID_HOOK);
+            container.className = "app__master";
+            rootIdNode = rootIdNode || document.getElementById(templates.ROOT)
+            rootIdNode.appendChild(container);
         }
 
         function searchTemplate() {
@@ -236,10 +245,10 @@
 
             containerInput.setAttribute('id', templates.SEARCH_INPUT.ID_HOOK);
             containerInput.setAttribute('placeholder', text.INPUT_PLACEHOLDER);
-            containerInput.className = "form-control";
+            containerInput.className = "search__input";
 
             containerButton.setAttribute('id', templates.SEARCH_BUTTON.ID_HOOK);
-            containerButton.className = "btn";
+            containerButton.className = "search__btn";
 
             detailIdNode = detailIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
             detailIdNode.appendChild(container);
@@ -265,7 +274,7 @@
             for (let i = 0; i < resultsArrayAsParam.length; i++) {
                 let containerItem = document.createElement('div');
                 containerItem.classList.add('results__item', 'results__item--default');
-                containerItem.setAttribute('onclick', "myFunction(this)");
+                containerItem.setAttribute('onclick', "triggerResultItemClickEvent(this)");
                 resultsIdNode = resultsIdNode || document.getElementById(templates.RESULTS.ID_HOOK);
                 resultsIdNode.appendChild(containerItem);
                 containerItem.setAttribute('id', resultsArrayAsParam[i].id);
@@ -283,77 +292,43 @@
          * @param recentSearchArrayAsParam
          */
         function recentSearchTemplate(recentSearchArrayAsParam) {
-            if (recentSearchArrayAsParam.length === 1) {
+            if (recentResults === false) {
                 const container = document.createElement('div');
                 container.setAttribute('id', templates.RECENT.ID_HOOK);
-                container.classList.add('recent');
+                container.classList.add('app__recent');
                 rootIdNode = rootIdNode || document.getElementById(templates.ROOT);
                 rootIdNode.appendChild(container);
 
-                const containerItem = document.createElement('div');
                 const containerTitle = document.createElement('div');
-                containerTitle.classList.add('results__item-title');
-                containerItem.classList.add('results__item', 'results__item--recent');
+                containerTitle.classList.add('results__title');
+
                 recentIdNode = recentIdNode || document.getElementById(templates.RECENT.ID_HOOK);
                 recentIdNode.appendChild(containerTitle);
                 containerTitle.innerText = text.RECENT_RESULTS_TITLE;
-                recentIdNode.appendChild(containerItem);
-                containerItem.innerText = recentSearchArrayAsParam[0];
+
+                for (let i = 0; i < recentSearchArrayAsParam.length; i++) {
+                    const containerItem = document.createElement('div');
+                    containerItem.classList.add('results__item', 'results__item--recent');
+                    recentIdNode.appendChild(containerItem);
+                    containerItem.setAttribute('onclick', "triggerRecentItemClickEvent(this)");
+                    containerItem.innerText = recentSearchArrayAsParam[i];
+                }
+                recentResults = true;
 
             } else {
                 const containerItem = document.createElement('div');
                 containerItem.classList.add('results__item', 'results__item--recent');
+                containerItem.setAttribute('onclick', "triggerRecentItemClickEvent(this)");
                 containerItem.innerText = recentSearchArrayAsParam[recentSearchArrayAsParam.length - 1];
                 recentIdNode = recentIdNode || document.getElementById(templates.RECENT.ID_HOOK);
-                if (recentSearchArrayAsParam.length < recentResultsNum) {
+                if (recentIdNode.childNodes.length > recentResultsNum) {
+                    console.log(recentIdNode.childNodes.length);
+                    recentIdNode.removeChild(recentIdNode.getElementsByClassName('results__item')[0]);
                     recentIdNode.appendChild(containerItem);
                 } else {
-                    templates.RECENT.removeChild(templates.RECENT.ID_HOOK.getElementsByTagName('div')[0]);
-                    recentIdNode(templates.RECENT.ID_HOOK).appendChild(containerItem);
+                    recentIdNode.appendChild(containerItem);
                 }
             }
-        }
-
-        function paginationTemplate() {
-        }
-
-        function masterTemplate() {
-            let container = document.createElement('div');
-            container.setAttribute('id', templates.MASTER.ID_HOOK);
-            container.className = "master";
-            rootIdNode = rootIdNode || document.getElementById(templates.ROOT)
-            rootIdNode.appendChild(container);
-        }
-
-        function previewTemplate(arg) {
-            for (let i = 0; i < arg.length; i++) {
-                let container = document.createElement('div');
-                container.setAttribute('id', templates.PREVIEW.ID_HOOK);
-                container.className = "preview";
-                document.getElementById(templates.MASTER.ID_HOOK).appendChild(container);
-                let containerIframe = document.createElement('iframe');
-                containerIframe.setAttribute('width', '100%');
-                containerIframe.setAttribute('height', '166');
-                containerIframe.setAttribute('scrolling', 'no');
-                containerIframe.setAttribute('frameborder', 'no');
-                containerIframe.setAttribute('src', trackIDvar)
-                document.getElementById(templates.PREVIEW.ID_HOOK).appendChild(containerIframe);
-                if (arg[i].artwork_url !== null) {
-                    let containerImage = document.createElement('img');
-                    containerImage.setAttribute('src', arg[i].artwork_url);
-                    containerImage.className = "preview__image";
-                    document.getElementById(templates.PREVIEW.ID_HOOK).appendChild(containerImage);
-                }
-
-            }
-        }
-
-        function previewImageTemplate() {
-
-        }
-
-        function playerTemplate() {
-
         }
 
         return {
@@ -365,7 +340,7 @@
         };
     }
 
-// Event Handlers
+    // Event Handlers
     function init() {
         // API method
         SC.initialize({
@@ -376,13 +351,4 @@
 
     window.onload = init;
 
-    function test() {
-        console.log("test");
-    }
-
 })();
-
-
-function myFunction(d) {
-    console.log(d.getAttribute('id'));
-}
