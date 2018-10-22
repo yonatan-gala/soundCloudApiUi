@@ -1,0 +1,13 @@
+$card-play-control: $play-control;
+
+.card {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  cursor: pointer;
+  transition: transform .3s ease-in-out;
+  &:hover {
+    transform: scale(1.1);
+  }
+}

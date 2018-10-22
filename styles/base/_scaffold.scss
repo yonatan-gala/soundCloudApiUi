@@ -25,16 +25,20 @@ input {
 
 @font-face {
   @include font-face(Overpass, Regular);
+  font-display: swap;
 }
 
 @font-face {
   @include font-face(Overpass, Black, $font-black);
+  font-display: swap;
 }
 
 @font-face {
   @include font-face(Overpass, Bold, $font-bold);
+  font-display: swap;
 }
 
 @font-face {
   @include font-face(Overpass, Light, $font-light);
+  font-display: swap;
 }

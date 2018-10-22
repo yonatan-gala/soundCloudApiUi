@@ -6,18 +6,17 @@
     const apiId = 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg';
 
     let activeSearch = false;
-    let recentSearch = false;
     let recentResults = false;
 
     let songsApiArray = [];
     let recentSearchArray = [];
 
     let inputContainerValue;
-    let searchValue;
 
     let inputContainerIdNode;
     let submitContainerIdNode;
     let rootIdNode;
+    let masterIdNode;
     let detailIdNode;
     let searchIdNode;
     let resultsIdNode;
@@ -114,16 +113,22 @@
             myEventManager.updateResultBaseOnSearchState(capturedInputValue);
         }
 
-        function triggerRecentItemClickEvent(d) {
-            myEventManager.manageRecentItemClick(d.innerHTML);
+        function triggerRecentItemClickEvent(clickElement) {
+            myEventManager.manageRecentItemSearch(clickElement.innerHTML);
         }
 
-        function triggerResultItemClickEvent(d) {
-            myEventManager.manageResultItemClick(d.getAttribute('id'));
+        function triggerResultItemClickEvent(clickElement) {
+            myEventManager.manageResultItemPreview(clickElement.getAttribute('id'));
         }
+
+        function triggerTrackClickEvent(trackId) {
+            myEventManager.getTrackPlayer(trackId);
+        }
+
 
         window.triggerResultItemClickEvent = triggerResultItemClickEvent;
         window.triggerRecentItemClickEvent = triggerRecentItemClickEvent;
+        window.triggerTrackClickEvent = triggerTrackClickEvent;
 
     }
 
@@ -165,6 +170,7 @@
                 songsApiArray = tracks;
                 myTemplateEngine.resultsTemplate(songsApiArray);
                 manageRecentSearch(query);
+                console.log(songsApiArray);
             });
         }
 
@@ -196,24 +202,42 @@
         }
 
 
-        //todo: name should change (search recent)
-        function manageRecentItemClick(capturedRecentItemQueryData) {
-            console.log(capturedRecentItemQueryData);
+        /**
+         * get param from recent item onclick ant decide whether to send forward to updatesearch
+         * if current input and param are different then update value on container.
+         * @param capturedRecentItemQueryData
+         */
+        function manageRecentItemSearch(capturedRecentItemQueryData) {
+            inputContainerIdNode = inputContainerIdNode || document.getElementById(templates.SEARCH_INPUT.ID_HOOK);
+            if (inputContainerIdNode.value !== capturedRecentItemQueryData) {
+                inputContainerIdNode.value = capturedRecentItemQueryData;
+                updateResultBaseOnSearchState(capturedRecentItemQueryData);
+            }
         }
 
-        //todo: name should change (preiview item)
-        function manageResultItemClick(capturedResultItemID) {
-            console.log(capturedResultItemID);
+        function manageResultItemPreview(capturedResultItemID) {
+            let previewValue;
+            for (let i = 0; i < songsApiArray.length; i++) {
+                if (songsApiArray[i].id == capturedResultItemID) {
+                    previewValue = songsApiArray[i].artwork_url;
+                }
+            }
+            if (previewValue === null) {
+                myTemplateEngine.noPreviewTemplate();
+            } else {
+                myTemplateEngine.previewTemplate(capturedResultItemID, previewValue);
+            }
         }
 
-        //TODO : pagination
-        //TODO: preview
-        //TODO: player
+        function getTrackPlayer(trackId) {
+            myTemplateEngine.playerTemplate(trackId);
+        }
 
         return {
             updateResultBaseOnSearchState,
-            manageRecentItemClick,
-            manageResultItemClick
+            manageRecentItemSearch,
+            manageResultItemPreview,
+            getTrackPlayer
         }
     }
 
@@ -289,6 +313,23 @@
             resultsIdNode.innerHTML = '';
         }
 
+
+        function previewTemplate(previewID, previewValue) {
+            masterIdNode = masterIdNode || document.getElementById(templates.MASTER.ID_HOOK);
+            masterIdNode.innerHTML = '';
+            const container = document.createElement('div');
+            container.className = "card";
+            container.setAttribute('onclick', `triggerTrackClickEvent(${previewID})`);
+            container.style = `background-image: url(${previewValue})`;
+            masterIdNode.appendChild(container);
+
+        }
+
+        function noPreviewTemplate() {
+            masterIdNode = masterIdNode || document.getElementById(templates.MASTER.ID_HOOK);
+            masterIdNode.innerHTML = '';
+        }
+
         /**
          * render recent search UI
          * @param recentSearchArrayAsParam
@@ -334,12 +375,26 @@
             }
         }
 
+        function playerTemplate(trackId) {
+            const container = document.createElement('iframe');
+            container.setAttribute('id', 'widgetIframe');
+            container.classList.add('player');
+            container.setAttribute('src', `https://w.soundcloud.com/player/?url=https://api.soundcloud.com/tracks/${trackId}&show_artwork=false&auto_play=true`);
+            masterIdNode.appendChild(container);
+        }
+
+        //TODO : pagination
+        //TODO : fly
+
         return {
             detailTemplate,
             resultsTemplate,
             recentSearchTemplate,
             masterTemplate,
-            removeResults
+            removeResults,
+            previewTemplate,
+            noPreviewTemplate,
+            playerTemplate
         };
     }
 

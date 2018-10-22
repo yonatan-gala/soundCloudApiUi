@@ -2,6 +2,7 @@ $app-master-image-bg-position: 8rem;
 $app-master-bg: $primary-logo;
 $app-master-bg-size: 20rem;
 $app-recent-border: 2px solid $type-color-highlight;
+$app-master-height: 30rem;
 
 .app {
   display: flex;
@@ -9,8 +10,8 @@ $app-recent-border: 2px solid $type-color-highlight;
   min-height: 100vh;
   &__master,
   &__detail {
-    flex-basis: 50%;
-    width: 50%;
+    overflow: hidden;
+    width: 100%;
   }
 
   &__master {
@@ -19,6 +20,8 @@ $app-recent-border: 2px solid $type-color-highlight;
     background-repeat: no-repeat;
     background-size: $app-master-bg-size;
     background-position: 50% $app-master-image-bg-position;
+    position: relative;
+    min-height: $app-master-height;
   }
 
   &__recent {
@@ -27,10 +30,16 @@ $app-recent-border: 2px solid $type-color-highlight;
     padding: ($spacing * 2) 0;
   }
 
-  &__master,
   &__detail,
   &__recent {
     padding: ($spacing * 2);
   }
 }
 
+@media (min-width: 767px) {
+  .app__master,
+  .app__detail {
+    flex-basis: 50%;
+    width: 50%;
+  }
+}
