@@ -1,4 +1,7 @@
 $card-play-control: $play-control;
+$card-hover-scale: $default-scale-up;
+$card-transition-duration: $default-transition-duration;
+$card-transition-timing: $default-transition-timing;
 
 .card {
   width: 100%;
@@ -6,8 +9,13 @@ $card-play-control: $play-control;
   background-repeat: no-repeat;
   background-size: cover;
   cursor: pointer;
-  transition: transform .3s ease-in-out;
+  transition: transform $card-transition-duration $card-transition-timing;
   &:hover {
-    transform: scale(1.1);
+    transform: scale($card-hover-scale);
+  }
+  &--no-preview {
+    background-image: url($imagepath + $card-play-control);
+    background-size: 10rem;
+    background-position: 50%;
   }
 }

@@ -7,6 +7,7 @@
 
     let activeSearch = false;
     let recentResults = false;
+    let paginationOffset = false;
 
     let songsApiArray = [];
     let recentSearchArray = [];
@@ -21,6 +22,7 @@
     let searchIdNode;
     let resultsIdNode;
     let recentIdNode;
+    let paginationNodeId;
 
 
     const text = {
@@ -64,6 +66,12 @@
         RECENT_RESULTS: {
             ID_HOOK: 'recentResults'
         },
+        PAGINATION: {
+            ID_HOOK: 'paginationContainer'
+        },
+        PAGINATION_ITEM: {
+            ID_HOOK: 'paginationContainerItem'
+        },
         RECENT_ITEM: {
             CLASS_HOOK: 'results__item'
         }
@@ -71,7 +79,6 @@
 
     function EventDetector() {
         let myEventManager = new EventManager();
-
         detectSearchHandler();
 
         // Handle Submit
@@ -88,7 +95,6 @@
             inputContainerIdNode.addEventListener('keypress', handleKeyPress);
             submitContainerIdNode.addEventListener('click', handleSubmitButton);
 
-            // Handle submit
             function handleSubmitButton() {
                 if (inputContainerValue !== inputContainerIdNode.value) {
                     inputContainerValue = inputContainerIdNode.value;
@@ -96,7 +102,6 @@
                 }
             }
 
-            // Handle Key press
             function handleKeyPress(e) {
                 if (e.keyCode === 13) {
                     submitContainerIdNode.click();
@@ -113,23 +118,33 @@
             myEventManager.updateResultBaseOnSearchState(capturedInputValue);
         }
 
+        /**
+         *
+         * @param clickElement
+         */
         function triggerRecentItemClickEvent(clickElement) {
             myEventManager.manageRecentItemSearch(clickElement.innerHTML);
         }
 
+        /**
+         *
+         * @param clickElement
+         */
         function triggerResultItemClickEvent(clickElement) {
             myEventManager.manageResultItemPreview(clickElement.getAttribute('id'));
         }
 
+        /**
+         *
+         * @param trackId
+         */
         function triggerTrackClickEvent(trackId) {
             myEventManager.getTrackPlayer(trackId);
         }
 
-
         window.triggerResultItemClickEvent = triggerResultItemClickEvent;
         window.triggerRecentItemClickEvent = triggerRecentItemClickEvent;
         window.triggerTrackClickEvent = triggerTrackClickEvent;
-
     }
 
     function EventManager() {
@@ -162,15 +177,20 @@
          * call the manageRecentSearch function => to manage the recent results render
          * @param query
          */
-        function getSongs(query) {
+        function getSongs(searchQuery) {
             SC.get('/tracks', {
                 limit: resultsNum,
-                q: query
+                linked_partitioning: 1,
+                q: searchQuery,
             }).then(function (tracks) {
-                songsApiArray = tracks;
+                songsApiArray = tracks.collection;
+                if (tracks.next_href !== null) {
+                    paginationOffset = true;
+                }
+                console.log(tracks);
                 myTemplateEngine.resultsTemplate(songsApiArray);
-                manageRecentSearch(query);
-                console.log(songsApiArray);
+                manageRecentSearch(searchQuery);
+
             });
         }
 
@@ -188,7 +208,6 @@
             if (queryIndex !== -1) {
                 recentSearchArray.splice(queryIndex, 1);
                 recentSearchArray.push(query);
-                console.log(recentSearchArray);
             } else {
                 if (recentSearchArray.length < recentResultsNum) {
                     recentSearchArray.push(query);
@@ -215,6 +234,10 @@
             }
         }
 
+        /**
+         *
+         * @param capturedResultItemID
+         */
         function manageResultItemPreview(capturedResultItemID) {
             let previewValue;
             for (let i = 0; i < songsApiArray.length; i++) {
@@ -223,12 +246,16 @@
                 }
             }
             if (previewValue === null) {
-                myTemplateEngine.noPreviewTemplate();
+                myTemplateEngine.noPreviewTemplate(capturedResultItemID);
             } else {
                 myTemplateEngine.previewTemplate(capturedResultItemID, previewValue);
             }
         }
 
+        /**
+         *
+         * @param trackId
+         */
         function getTrackPlayer(trackId) {
             myTemplateEngine.playerTemplate(trackId);
         }
@@ -243,6 +270,7 @@
 
 // view Constructor
     function TemplateEngine() {
+
         function detailTemplate() {
             const container = document.createElement('div');
             container.setAttribute('id', templates.DETAIL.ID_HOOK);
@@ -298,13 +326,26 @@
                 detailIdNode.appendChild(container);
             }
             for (let i = 0; i < resultsArrayAsParam.length; i++) {
-                let containerItem = document.createElement('div');
+                const containerItem = document.createElement('div');
                 containerItem.classList.add('results__item', 'results__item--default');
                 containerItem.setAttribute('onclick', "triggerResultItemClickEvent(this)");
                 resultsIdNode = resultsIdNode || document.getElementById(templates.RESULTS.ID_HOOK);
                 resultsIdNode.appendChild(containerItem);
                 containerItem.setAttribute('id', resultsArrayAsParam[i].id);
                 containerItem.innerText = resultsArrayAsParam[i].title;
+            }
+            if (paginationOffset === true) {
+                const containerPagination = document.createElement('div');
+                const containerPaginationItem = document.createElement('div');
+                containerPagination.setAttribute('id', templates.PAGINATION.ID_HOOK);
+                containerPagination.classList.add('pagination');
+                containerPaginationItem.setAttribute('id', templates.PAGINATION_ITEM.ID_HOOK);
+                containerPaginationItem.classList.add('pagination__item');
+                containerPaginationItem.setAttribute('onclick', "triggerPaginationEvent(this)");
+                containerPaginationItem.innerText = "Next >";
+                detailIdNode.appendChild(containerPagination);
+                paginationNodeId = paginationNodeId || document.getElementById(templates.PAGINATION.ID_HOOK)
+                paginationNodeId.appendChild(containerPaginationItem)
             }
         }
 
@@ -313,7 +354,11 @@
             resultsIdNode.innerHTML = '';
         }
 
-
+        /**
+         *
+         * @param previewID
+         * @param previewValue
+         */
         function previewTemplate(previewID, previewValue) {
             masterIdNode = masterIdNode || document.getElementById(templates.MASTER.ID_HOOK);
             masterIdNode.innerHTML = '';
@@ -325,9 +370,29 @@
 
         }
 
-        function noPreviewTemplate() {
+        /**
+         *
+         * @param previewID
+         */
+        function noPreviewTemplate(previewID) {
             masterIdNode = masterIdNode || document.getElementById(templates.MASTER.ID_HOOK);
             masterIdNode.innerHTML = '';
+            const container = document.createElement('div');
+            container.classList.add("card", "card--no-preview");
+            container.setAttribute('onclick', `triggerTrackClickEvent(${previewID})`);
+            masterIdNode.appendChild(container);
+        }
+
+        /**
+         *
+         * @param trackId
+         */
+        function playerTemplate(trackId) {
+            const container = document.createElement('iframe');
+            container.setAttribute('id', 'widgetIframe');
+            container.classList.add('player');
+            container.setAttribute('src', `https://w.soundcloud.com/player/?url=https://api.soundcloud.com/tracks/${trackId}&show_artwork=false&auto_play=true`);
+            masterIdNode.appendChild(container);
         }
 
         /**
@@ -373,14 +438,6 @@
                     containerItem.innerText = recentSearchArrayAsParam[i];
                 }
             }
-        }
-
-        function playerTemplate(trackId) {
-            const container = document.createElement('iframe');
-            container.setAttribute('id', 'widgetIframe');
-            container.classList.add('player');
-            container.setAttribute('src', `https://w.soundcloud.com/player/?url=https://api.soundcloud.com/tracks/${trackId}&show_artwork=false&auto_play=true`);
-            masterIdNode.appendChild(container);
         }
 
         //TODO : pagination

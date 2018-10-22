@@ -1,6 +1,6 @@
-$app-master-image-bg-position: 8rem;
+$app-master-image-bg-position: 95% 95%;
 $app-master-bg: $primary-logo;
-$app-master-bg-size: 20rem;
+$app-master-bg-size: 5rem;
 $app-recent-border: 2px solid $type-color-highlight;
 $app-master-height: 30rem;
 
@@ -19,7 +19,7 @@ $app-master-height: 30rem;
     background-image: url($imagepath + $app-master-bg);
     background-repeat: no-repeat;
     background-size: $app-master-bg-size;
-    background-position: 50% $app-master-image-bg-position;
+    background-position: $app-master-image-bg-position;
     position: relative;
     min-height: $app-master-height;
   }

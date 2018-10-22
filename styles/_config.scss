@@ -1,3 +1,17 @@
+// color and brand
+$color-stk-concrete: #f2f2f2;
+$color-stk-international-orange: #f50;
+$color-stk-mine-shaft: #333;
+$color-stk-dusty-gray: #999;
+
+$brand-secondary: $color-stk-concrete;
+$brand-primary: $color-stk-international-orange;
+$type-color-base: $color-stk-mine-shaft;
+
+$type-color-light: $color-stk-dusty-gray;
+$type-color-highlight: $brand-primary;
+
+// typography
 $primary-font-family: 'Overpass';
 $fallback-font-family: sans-serif;
 
@@ -9,19 +23,16 @@ $font-black: 900;
 $font-light: 300;
 $font-bold: 700;
 
+// global
+$spacing: 1rem;
+$global-line-height: 1.2;
+$default-scale-up: 1.1;
+$default-transition-duration: .3s;
+$default-transition-timing: ease-in-out;
+
+//pathes
 $fontpath: '../fonts/';
 $imagepath: '../images/';
-
-$brand-secondary: #f2f2f2;
-$brand-primary: #f50;
-
-$type-color-base: #333;
-$type-color-light: #999;
-$type-color-highlight: $brand-primary;
-
-$spacing: 1rem;
-
-$global-line-height: 1.2;
 
 //assets:
 $primary-logo: 'Soundcloud.svg';
