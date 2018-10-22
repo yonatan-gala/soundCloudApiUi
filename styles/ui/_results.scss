@@ -11,9 +11,14 @@
       }
     }
     &--recent {
-      background-color: $brand-secondary;
       color: $type-color-light;
+      padding: $spacing (2 * $spacing);
       margin-bottom: ($spacing / 2);
+      margin-left: -($spacing * 2);
+      margin-right: -($spacing * 2);
+      &:nth-child(even) {
+        background-color: $brand-secondary;
+      }
       &:hover,
       &:active,
       &:focus {

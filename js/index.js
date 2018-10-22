@@ -180,7 +180,9 @@
         function manageRecentSearch(query) {
             const queryIndex = recentSearchArray.indexOf(query);
             if (queryIndex !== -1) {
-                recentSearchArray.splice(queryIndex, 0).push(query);
+                recentSearchArray.splice(queryIndex, 1);
+                recentSearchArray.push(query);
+                console.log(recentSearchArray);
             } else {
                 if (recentSearchArray.length < recentResultsNum) {
                     recentSearchArray.push(query);
@@ -316,17 +318,18 @@
                 recentResults = true;
 
             } else {
-                const containerItem = document.createElement('div');
-                containerItem.classList.add('results__item', 'results__item--recent');
-                containerItem.setAttribute('onclick', "triggerRecentItemClickEvent(this)");
-                containerItem.innerText = recentSearchArrayAsParam[recentSearchArrayAsParam.length - 1];
-                recentIdNode = recentIdNode || document.getElementById(templates.RECENT.ID_HOOK);
-                if (recentIdNode.childNodes.length > recentResultsNum) {
-                    console.log(recentIdNode.childNodes.length);
-                    recentIdNode.removeChild(recentIdNode.getElementsByClassName('results__item')[0]);
+                recentIdNode.innerHTML = '';
+                const containerTitle = document.createElement('div');
+                containerTitle.innerText = text.RECENT_RESULTS_TITLE;
+                containerTitle.classList.add('results__title');
+                recentIdNode.appendChild(containerTitle);
+
+                for (let i = 0; i < recentSearchArrayAsParam.length; i++) {
+                    const containerItem = document.createElement('div');
+                    containerItem.classList.add('results__item', 'results__item--recent');
                     recentIdNode.appendChild(containerItem);
-                } else {
-                    recentIdNode.appendChild(containerItem);
+                    containerItem.setAttribute('onclick', "triggerRecentItemClickEvent(this)");
+                    containerItem.innerText = recentSearchArrayAsParam[i];
                 }
             }
         }

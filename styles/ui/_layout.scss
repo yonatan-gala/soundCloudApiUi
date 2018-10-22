@@ -24,6 +24,7 @@ $app-recent-border: 2px solid $type-color-highlight;
   &__recent {
     flex-basis: 100%;
     border-top: $app-recent-border;
+    padding: ($spacing * 2) 0;
   }
 
   &__master,
