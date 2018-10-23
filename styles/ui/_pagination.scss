@@ -1,4 +1,6 @@
 .pagination {
+  display: flex;
+  justify-content: flex-end;
   &__item {
     background: red;
     color: white;

@@ -10,11 +10,11 @@ $app-master-height: 30rem;
   min-height: 100vh;
   &__master,
   &__detail {
-    overflow: hidden;
     width: 100%;
   }
 
   &__master {
+    overflow: hidden;
     background-color: $brand-secondary;
     background-image: url($imagepath + $app-master-bg);
     background-repeat: no-repeat;

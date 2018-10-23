@@ -5,14 +5,18 @@
     const recentResultsNum = 5;
     const apiId = 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg';
 
+    let collectionPageNumber = 0;
+
     let activeSearch = false;
     let recentResults = false;
-    let paginationOffset = false;
+    let hasPagination = false;
+    let previewActive = false;
 
     let songsApiArray = [];
     let recentSearchArray = [];
 
     let inputContainerValue;
+    let paginationHref;
 
     let inputContainerIdNode;
     let submitContainerIdNode;
@@ -27,7 +31,6 @@
 
     const text = {
         INPUT_PLACEHOLDER: 'Search a song..',
-        MESSAGE_NO_RESULTS: 'No results found',
         RECENT_RESULTS_TITLE: "Recent results"
     };
 
@@ -99,6 +102,7 @@
                 if (inputContainerValue !== inputContainerIdNode.value) {
                     inputContainerValue = inputContainerIdNode.value;
                     sendSubmitEvent(inputContainerIdNode.value);
+                    collectionPageNumber = 0;
                 }
             }
 
@@ -113,7 +117,6 @@
          * sends captured Input Value to myEventManager.updateResultBaseOnSearchState
          * @param capturedInputValue
          */
-        // submit search
         function sendSubmitEvent(capturedInputValue) {
             myEventManager.updateResultBaseOnSearchState(capturedInputValue);
         }
@@ -123,6 +126,7 @@
          * @param clickElement
          */
         function triggerRecentItemClickEvent(clickElement) {
+            collectionPageNumber = 1;
             myEventManager.manageRecentItemSearch(clickElement.innerHTML);
         }
 
@@ -130,8 +134,8 @@
          *
          * @param clickElement
          */
-        function triggerResultItemClickEvent(clickElement) {
-            myEventManager.manageResultItemPreview(clickElement.getAttribute('id'));
+        function triggerResultItemClickEvent(trackID) {
+            myEventManager.manageResultItemPreview(trackID);
         }
 
         /**
@@ -142,9 +146,16 @@
             myEventManager.getTrackPlayer(trackId);
         }
 
+        function triggerPaginationEvent() {
+            console.log("boom");
+            myEventManager.getNextSongs(inputContainerIdNode.value);
+
+        }
+
         window.triggerResultItemClickEvent = triggerResultItemClickEvent;
         window.triggerRecentItemClickEvent = triggerRecentItemClickEvent;
         window.triggerTrackClickEvent = triggerTrackClickEvent;
+        window.triggerPaginationEvent = triggerPaginationEvent;
     }
 
     function EventManager() {
@@ -184,13 +195,39 @@
                 q: searchQuery,
             }).then(function (tracks) {
                 songsApiArray = tracks.collection;
-                if (tracks.next_href !== null) {
-                    paginationOffset = true;
-                }
                 console.log(tracks);
                 myTemplateEngine.resultsTemplate(songsApiArray);
                 manageRecentSearch(searchQuery);
+                if (tracks.next_href !== null) {
+                    hasPagination = true;
+                    paginationHref = tracks.next_href;
+                    collectionPageNumber += 6;
+                    myTemplateEngine.paginationTemplate()
+                } else {
+                    hasPagination = false;
+                }
+            });
+        }
 
+        function getNextSongs(currentSearchQuery) {
+            SC.get('/tracks', {
+                limit: resultsNum,
+                linked_partitioning: collectionPageNumber,
+                q: currentSearchQuery,
+            }).then(function (tracks) {
+                songsApiArray = tracks.collection;
+                console.log(tracks);
+                myTemplateEngine.removeResults()
+                myTemplateEngine.removePagination();
+                myTemplateEngine.resultsTemplate(songsApiArray)
+                if (tracks.next_href !== null) {
+                    hasPagination = true;
+                    paginationHref = tracks.next_href;
+                    collectionPageNumber += 6;
+                    myTemplateEngine.paginationTemplate()
+                } else {
+                    hasPagination = false;
+                }
             });
         }
 
@@ -264,7 +301,8 @@
             updateResultBaseOnSearchState,
             manageRecentItemSearch,
             manageResultItemPreview,
-            getTrackPlayer
+            getTrackPlayer,
+            getNextSongs
         }
     }
 
@@ -318,40 +356,48 @@
          *
          */
         function resultsTemplate(resultsArrayAsParam) {
-            if (!resultsIdNode) {
-                const container = document.createElement('div');
-                container.setAttribute('id', templates.RESULTS.ID_HOOK);
-                container.className = "results";
-                detailIdNode = detailIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
-                detailIdNode.appendChild(container);
-            }
+            const container = document.createElement('div');
+            container.setAttribute('id', templates.RESULTS.ID_HOOK);
+            container.classList.add('results');
+            detailIdNode = detailIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
+            detailIdNode.appendChild(container);
+
             for (let i = 0; i < resultsArrayAsParam.length; i++) {
                 const containerItem = document.createElement('div');
                 containerItem.classList.add('results__item', 'results__item--default');
-                containerItem.setAttribute('onclick', "triggerResultItemClickEvent(this)");
+                containerItem.setAttribute('onclick', `triggerResultItemClickEvent(${resultsArrayAsParam[i].id})`);
                 resultsIdNode = resultsIdNode || document.getElementById(templates.RESULTS.ID_HOOK);
                 resultsIdNode.appendChild(containerItem);
                 containerItem.setAttribute('id', resultsArrayAsParam[i].id);
                 containerItem.innerText = resultsArrayAsParam[i].title;
             }
-            if (paginationOffset === true) {
-                const containerPagination = document.createElement('div');
-                const containerPaginationItem = document.createElement('div');
-                containerPagination.setAttribute('id', templates.PAGINATION.ID_HOOK);
-                containerPagination.classList.add('pagination');
-                containerPaginationItem.setAttribute('id', templates.PAGINATION_ITEM.ID_HOOK);
-                containerPaginationItem.classList.add('pagination__item');
-                containerPaginationItem.setAttribute('onclick', "triggerPaginationEvent(this)");
-                containerPaginationItem.innerText = "Next >";
-                detailIdNode.appendChild(containerPagination);
-                paginationNodeId = paginationNodeId || document.getElementById(templates.PAGINATION.ID_HOOK)
-                paginationNodeId.appendChild(containerPaginationItem)
-            }
+        }
+
+        function paginationTemplate() {
+            const container = document.createElement('div');
+            const containerItem = document.createElement('button');
+            container.setAttribute('id', templates.PAGINATION.ID_HOOK);
+            container.classList.add('pagination');
+            containerItem.classList.add('pagination__item');
+            containerItem.innerText = "Next >";
+            detailIdNode.appendChild(container);
+            containerItem.setAttribute('onclick', `triggerPaginationEvent()`);
+            paginationNodeId = paginationNodeId || document.getElementById(templates.PAGINATION.ID_HOOK);
+            paginationNodeId.appendChild(containerItem);
         }
 
         function removeResults() {
-            resultsIdNode = resultsIdNode || document.getElementById(templates.RESULTS.ID_HOOK);
+            resultsIdNode = resultsIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
             resultsIdNode.innerHTML = '';
+            paginationNodeId.innerHTML = '';
+            hasPagination = true;
+        }
+
+        function removePagination() {
+            resultsIdNode = resultsIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
+            resultsIdNode.innerHTML = '';
+            paginationNodeId.innerHTML = '';
+            hasPagination = true;
         }
 
         /**
@@ -364,10 +410,17 @@
             masterIdNode.innerHTML = '';
             const container = document.createElement('div');
             container.className = "card";
-            container.setAttribute('onclick', `triggerTrackClickEvent(${previewID})`);
+            container.setAttribute('onclick', `triggerTrackClickEvent()`);
             container.style = `background-image: url(${previewValue})`;
             masterIdNode.appendChild(container);
+            previewActive = true;
+        }
 
+        function removePreview() {
+            if (previewActive === true) {
+                masterIdNode.innerHTML = '';
+                previewActive = false;
+            }
         }
 
         /**
@@ -440,17 +493,19 @@
             }
         }
 
-        //TODO : pagination
-        //TODO : fly
+        //TODO: fly
 
         return {
             detailTemplate,
             resultsTemplate,
+            paginationTemplate,
             recentSearchTemplate,
             masterTemplate,
             removeResults,
+            removePagination,
             previewTemplate,
             noPreviewTemplate,
+            removePreview,
             playerTemplate
         };
     }
