@@ -389,15 +389,10 @@
         function removeResults() {
             resultsIdNode = resultsIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
             resultsIdNode.innerHTML = '';
-            paginationNodeId.innerHTML = '';
-            hasPagination = true;
         }
 
         function removePagination() {
-            resultsIdNode = resultsIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
-            resultsIdNode.innerHTML = '';
-            paginationNodeId.innerHTML = '';
-            hasPagination = true;
+            paginationNodeId.remove();
         }
 
         /**
