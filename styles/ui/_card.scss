@@ -2,11 +2,10 @@ $card-play-control: $play-control;
 $card-hover-scale: $default-scale-up;
 $card-transition-duration: $default-transition-duration;
 $card-transition-timing: $default-transition-timing;
+$card-background-image-size: 8rem;
 
 .card {
   transition: transform $card-transition-duration $card-transition-timing;
-  background-repeat: no-repeat;
-  background-size: cover;
   cursor: pointer;
   width: 100%;
   height: 100%;
@@ -20,7 +19,8 @@ $card-transition-timing: $default-transition-timing;
   }
   &--no-preview {
     background-image: url($imagepath + $card-play-control);
-    background-position: 50%;
-    background-size: 10rem;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-size: $card-background-image-size;
   }
 }
