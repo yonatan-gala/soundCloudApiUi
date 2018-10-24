@@ -8,6 +8,13 @@ $app-master-height: 30rem;
   display: flex;
   flex-wrap: wrap;
   min-height: 100vh;
+  &__detail {
+    @include breakpoint(tablet-desktop) {
+      flex-basis: 60%;
+      width: 60%;
+    }
+  }
+
   &__master,
   &__detail {
     width: 100%;
@@ -26,6 +33,10 @@ $app-master-height: 30rem;
     background-size: $app-master-bg-size;
     min-height: $app-master-height;
     overflow: hidden;
+    @include breakpoint(tablet-desktop) {
+      flex-basis: 40%;
+      width: 40%;
+    }
   }
 
   &__recent {
@@ -40,13 +51,3 @@ $app-master-height: 30rem;
   }
 }
 
-@media (min-width: 767px) {
-  .app__master {
-    flex-basis: 40%;
-    width: 40%;
-  }
-  .app__detail {
-    flex-basis: 60%;
-    width: 60%;
-  }
-}

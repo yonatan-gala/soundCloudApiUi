@@ -14,3 +14,11 @@
   url("#{$fontpath}#{$family}-#{$variant}.woff2") format("woff2"),
   url("#{$fontpath}#{$family}-#{$variant}.woff") format("woff");
 }
+
+@mixin breakpoint($point) {
+  @if $point == tablet-desktop {
+    @media (min-width: $break-768) {
+      @content;
+    }
+  }
+}
