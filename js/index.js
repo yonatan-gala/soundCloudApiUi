@@ -226,7 +226,7 @@
             }).then(function (tracks) {
                 songsApiArray = tracks.collection;
                 console.log(tracks);
-                myTemplateEngine.resultsTemplate(songsApiArray)
+                myTemplateEngine.resultsTemplate(songsApiArray);
                 if (tracks.next_href !== null) {
                     hasPagination = true;
                     paginationHref = tracks.next_href;
@@ -284,7 +284,7 @@
         function manageResultItemPreview(capturedResultItemID) {
             let previewValue;
             for (let i = 0; i < songsApiArray.length; i++) {
-                if (songsApiArray[i].id == capturedResultItemID) {
+                if (songsApiArray[i].id === capturedResultItemID) {
                     previewValue = songsApiArray[i].artwork_url;
                 }
             }
