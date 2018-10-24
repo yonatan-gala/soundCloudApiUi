@@ -1,16 +1,21 @@
 //"use strict";
 
+//TODO: fly
+
 (function () {
     const resultsNum = 6;
     const recentResultsNum = 5;
     const apiId = 'E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg';
+    const artWorkSetting = 'show_artwork=false';
+    const autoPlayerSetting = 'auto_play=true';
 
+    //
     let collectionPageNumber = 0;
+    let resultsInit = false;
+    let paginationInit = false;
 
-    let activeSearch = false;
     let recentResults = false;
     let hasPagination = false;
-    let previewActive = false;
 
     let songsApiArray = [];
     let recentSearchArray = [];
@@ -18,16 +23,20 @@
     let inputContainerValue;
     let paginationHref;
 
+
+    //
+    let rootIdNode;
+    let detailIdNode;
+    let detailSearchIdNode;
+    let searchIdNode;
     let inputContainerIdNode;
     let submitContainerIdNode;
-    let rootIdNode;
-    let masterIdNode;
-    let detailIdNode;
-    let searchIdNode;
+    let detailResultsIdNode;
     let resultsIdNode;
-    let recentIdNode;
     let paginationNodeId;
-
+    let detailPaginationIdNode;
+    let masterIdNode;
+    let recentIdNode;
 
     const text = {
         INPUT_PLACEHOLDER: 'Search a song..',
@@ -39,11 +48,17 @@
         DETAIL: {
             ID_HOOK: 'detail',
         },
-        MASTER: {
-            ID_HOOK: 'master'
+        DETAIL_SEARCH: {
+            ID_HOOK: 'detailSearch',
         },
-        RECENT: {
-            ID_HOOK: 'recent'
+        DETAIL_RESULTS: {
+            ID_HOOK: 'detailResults',
+        },
+        DETAIL_PAGINATION: {
+            ID_HOOK: 'detailRecent',
+        },
+        DETAIL_RECENT: {
+            ID_HOOK: 'detailSearch',
         },
         SEARCH: {
             ID_HOOK: 'search',
@@ -57,14 +72,8 @@
         RESULTS: {
             ID_HOOK: 'results'
         },
-        RESULTS_ITEM: {
-            CLASS_HOOK: ['results__item']
-        },
-        PREVIEW: {
-            ID_HOOK: 'preview'
-        },
-        PLAYER: {
-            ID_HOOK: 'player'
+        RECENT: {
+            ID_HOOK: 'recent'
         },
         RECENT_RESULTS: {
             ID_HOOK: 'recentResults'
@@ -72,11 +81,14 @@
         PAGINATION: {
             ID_HOOK: 'paginationContainer'
         },
-        PAGINATION_ITEM: {
-            ID_HOOK: 'paginationContainerItem'
+        MASTER: {
+            ID_HOOK: 'master'
         },
-        RECENT_ITEM: {
-            CLASS_HOOK: 'results__item'
+        PREVIEW: {
+            ID_HOOK: 'preview'
+        },
+        PLAYER: {
+            ID_HOOK: 'player'
         }
     };
 
@@ -98,6 +110,9 @@
             inputContainerIdNode.addEventListener('keypress', handleKeyPress);
             submitContainerIdNode.addEventListener('click', handleSubmitButton);
 
+            /**
+             * prevent sending submit without refreshing query.
+             */
             function handleSubmitButton() {
                 if (inputContainerValue !== inputContainerIdNode.value) {
                     inputContainerValue = inputContainerIdNode.value;
@@ -119,6 +134,7 @@
          */
         function sendSubmitEvent(capturedInputValue) {
             myEventManager.updateResultBaseOnSearchState(capturedInputValue);
+
         }
 
         /**
@@ -160,8 +176,9 @@
 
     function EventManager() {
         let myTemplateEngine = new TemplateEngine();
-        myTemplateEngine.detailTemplate();
-        myTemplateEngine.masterTemplate();
+        myTemplateEngine.createLayout();
+        // myTemplateEngine.detailTemplate();
+        //myTemplateEngine.masterTemplate();
 
         if (localStorage["recentSearchArray"]) {
             recentSearchArray = JSON.parse(localStorage.getItem("recentSearchArray"));
@@ -176,8 +193,6 @@
          * @param query
          */
         function updateResultBaseOnSearchState(query) {
-            activeSearch ? myTemplateEngine.removeResults() : null;
-            activeSearch = true;
             getSongs(query);
         }
 
@@ -217,8 +232,6 @@
             }).then(function (tracks) {
                 songsApiArray = tracks.collection;
                 console.log(tracks);
-                myTemplateEngine.removeResults()
-                myTemplateEngine.removePagination();
                 myTemplateEngine.resultsTemplate(songsApiArray)
                 if (tracks.next_href !== null) {
                     hasPagination = true;
@@ -257,7 +270,6 @@
             myTemplateEngine.recentSearchTemplate(recentSearchArray);
         }
 
-
         /**
          * get param from recent item onclick ant decide whether to send forward to updatesearch
          * if current input and param are different then update value on container.
@@ -283,7 +295,7 @@
                 }
             }
             if (previewValue === null) {
-                myTemplateEngine.noPreviewTemplate(capturedResultItemID);
+                myTemplateEngine.previewTemplate(capturedResultItemID);
             } else {
                 myTemplateEngine.previewTemplate(capturedResultItemID, previewValue);
             }
@@ -308,23 +320,95 @@
 
 // view Constructor
     function TemplateEngine() {
+        /**
+         * creating init ui by calling basic containers templates
+         */
+        function createLayout() {
+            detailTemplate();
+            detailSearchTemplate();
+            detailResultsTemplate();
+            detailPaginationTemplate();
+            masterTemplate();
+            recentTemplate();
+        }
 
+        /**
+         * Detail UI
+         * @type {*|HTMLElement}
+         */
         function detailTemplate() {
-            const container = document.createElement('div');
-            container.setAttribute('id', templates.DETAIL.ID_HOOK);
-            container.className = "app__detail";
             rootIdNode = rootIdNode || document.getElementById(templates.ROOT);
-            rootIdNode.appendChild(container);
+            const containerDetail = document.createElement('div');
+            containerDetail.setAttribute('id', templates.DETAIL.ID_HOOK);
+            containerDetail.className = "app__detail";
+            rootIdNode.appendChild(containerDetail);
+            detailIdNode = detailIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
+        }
+
+        /**
+         * Detail search UI
+         * @type {HTMLElement}
+         * nested function: searchTemplate
+         */
+        function detailSearchTemplate() {
+            const containerDetailSearch = document.createElement('div');
+            containerDetailSearch.setAttribute('id', templates.DETAIL_SEARCH.ID_HOOK);
+            containerDetailSearch.className = "app__search";
+            detailIdNode.appendChild(containerDetailSearch);
+            detailSearchIdNode = detailSearchIdNode || document.getElementById(templates.DETAIL_SEARCH.ID_HOOK);
 
             searchTemplate();
         }
 
+        /**
+         * Detail results UI
+         * @type {HTMLElement}
+         */
+        function detailResultsTemplate() {
+            const containerDetailResults = document.createElement('div');
+            containerDetailResults.setAttribute('id', templates.DETAIL_RESULTS.ID_HOOK);
+            containerDetailResults.className = "app__results";
+            detailIdNode.appendChild(containerDetailResults);
+            detailResultsIdNode = detailResultsIdNode || document.getElementById(templates.DETAIL_RESULTS.ID_HOOK);
+
+        }
+
+        /**
+         * Detail pagination UI
+         * @type {HTMLElement}
+         */
+        function detailPaginationTemplate() {
+            const containerDetailPagination = document.createElement('div');
+            containerDetailPagination.setAttribute('id', templates.DETAIL_PAGINATION.ID_HOOK);
+            containerDetailPagination.className = "app__pagination";
+            detailIdNode.appendChild(containerDetailPagination);
+            detailPaginationIdNode = detailPaginationIdNode || document.getElementById(templates.DETAIL_PAGINATION.ID_HOOK);
+
+        }
+
+        /**
+         * Master UI
+         * @type {HTMLElement}
+         */
         function masterTemplate() {
-            let container = document.createElement('div');
-            container.setAttribute('id', templates.MASTER.ID_HOOK);
-            container.className = "app__master";
-            rootIdNode = rootIdNode || document.getElementById(templates.ROOT)
-            rootIdNode.appendChild(container);
+            const containerMaster = document.createElement('div');
+            containerMaster.setAttribute('id', templates.MASTER.ID_HOOK);
+            containerMaster.className = "app__master";
+            rootIdNode.appendChild(containerMaster);
+            masterIdNode = masterIdNode || document.getElementById(templates.MASTER.ID_HOOK);
+
+        }
+
+        /**
+         * Detail Recent Search UI
+         * @type {HTMLElement}
+         */
+        function recentTemplate() {
+            const containerRecent = document.createElement('div');
+            containerRecent.setAttribute('id', templates.RECENT.ID_HOOK);
+            containerRecent.className = "app__recent";
+            rootIdNode.appendChild(containerRecent);
+            recentIdNode = recentIdNode || document.getElementById(templates.ROOT.ID_HOOK);
         }
 
         function searchTemplate() {
@@ -342,12 +426,12 @@
             containerButton.setAttribute('id', templates.SEARCH_BUTTON.ID_HOOK);
             containerButton.className = "search__btn";
 
-            detailIdNode = detailIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
-            detailIdNode.appendChild(container);
+            detailSearchIdNode.appendChild(container);
             searchIdNode = searchIdNode || document.getElementById(templates.SEARCH.ID_HOOK);
             searchIdNode.appendChild(containerInput);
             searchIdNode.appendChild(containerButton);
         }
+
 
         /**
          * render results UI
@@ -356,43 +440,43 @@
          *
          */
         function resultsTemplate(resultsArrayAsParam) {
-            const container = document.createElement('div');
-            container.setAttribute('id', templates.RESULTS.ID_HOOK);
-            container.classList.add('results');
-            detailIdNode = detailIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
-            detailIdNode.appendChild(container);
-
+            if (resultsInit === false) {
+                const container = document.createElement('div');
+                container.setAttribute('id', templates.RESULTS.ID_HOOK);
+                container.classList.add('results');
+                detailResultsIdNode.appendChild(container);
+                resultsIdNode = resultsIdNode || document.getElementById(templates.RESULTS.ID_HOOK);
+            } else {
+                resultsIdNode.innerHTML = '';
+            }
             for (let i = 0; i < resultsArrayAsParam.length; i++) {
                 const containerItem = document.createElement('div');
                 containerItem.classList.add('results__item', 'results__item--default');
                 containerItem.setAttribute('onclick', `triggerResultItemClickEvent(${resultsArrayAsParam[i].id})`);
-                resultsIdNode = resultsIdNode || document.getElementById(templates.RESULTS.ID_HOOK);
                 resultsIdNode.appendChild(containerItem);
                 containerItem.setAttribute('id', resultsArrayAsParam[i].id);
                 containerItem.innerText = resultsArrayAsParam[i].title;
             }
+            resultsInit = true;
+            masterIdNode.innerHTML = '';
         }
 
         function paginationTemplate() {
-            const container = document.createElement('div');
+            if (paginationInit === false) {
+                const container = document.createElement('div');
+                container.setAttribute('id', templates.PAGINATION.ID_HOOK);
+                container.classList.add('pagination');
+                detailIdNode.appendChild(container);
+                paginationNodeId = paginationNodeId || document.getElementById(templates.PAGINATION.ID_HOOK);
+            } else {
+                paginationNodeId.innerHTML = '';
+            }
             const containerItem = document.createElement('button');
-            container.setAttribute('id', templates.PAGINATION.ID_HOOK);
-            container.classList.add('pagination');
             containerItem.classList.add('pagination__item');
             containerItem.innerText = "Next >";
-            detailIdNode.appendChild(container);
             containerItem.setAttribute('onclick', `triggerPaginationEvent()`);
-            paginationNodeId = paginationNodeId || document.getElementById(templates.PAGINATION.ID_HOOK);
             paginationNodeId.appendChild(containerItem);
-        }
-
-        function removeResults() {
-            resultsIdNode = resultsIdNode || document.getElementById(templates.DETAIL.ID_HOOK);
-            resultsIdNode.innerHTML = '';
-        }
-
-        function removePagination() {
-            paginationNodeId.remove();
+            paginationInit = true;
         }
 
         /**
@@ -400,34 +484,20 @@
          * @param previewID
          * @param previewValue
          */
-        function previewTemplate(previewID, previewValue) {
-            masterIdNode = masterIdNode || document.getElementById(templates.MASTER.ID_HOOK);
+        function previewTemplate(previewID, previewValue = null) {
             masterIdNode.innerHTML = '';
             const container = document.createElement('div');
-            container.className = "card";
-            container.setAttribute('onclick', `triggerTrackClickEvent()`);
-            container.style = `background-image: url(${previewValue})`;
-            masterIdNode.appendChild(container);
-            previewActive = true;
-        }
-
-        function removePreview() {
-            if (previewActive === true) {
-                masterIdNode.innerHTML = '';
-                previewActive = false;
-            }
-        }
-
-        /**
-         *
-         * @param previewID
-         */
-        function noPreviewTemplate(previewID) {
-            masterIdNode = masterIdNode || document.getElementById(templates.MASTER.ID_HOOK);
-            masterIdNode.innerHTML = '';
-            const container = document.createElement('div');
-            container.classList.add("card", "card--no-preview");
             container.setAttribute('onclick', `triggerTrackClickEvent(${previewID})`);
+            if (previewValue) {
+                container.classList.add('card');
+                const containerImage = document.createElement('img');
+                containerImage.setAttribute('src', `${previewValue}`);
+                containerImage.classList.add('card__img');
+                container.appendChild(containerImage);
+                // container.style = `background-image: url(${previewValue})`;
+            } else {
+                container.classList.add('card', 'card--no-preview');
+            }
             masterIdNode.appendChild(container);
         }
 
@@ -439,7 +509,8 @@
             const container = document.createElement('iframe');
             container.setAttribute('id', 'widgetIframe');
             container.classList.add('player');
-            container.setAttribute('src', `https://w.soundcloud.com/player/?url=https://api.soundcloud.com/tracks/${trackId}&show_artwork=false&auto_play=true`);
+            const playerConfig = artWorkSetting + '&' + autoPlayerSetting;
+            container.setAttribute('src', `https://w.soundcloud.com/player/?url=https://api.soundcloud.com/tracks/${trackId}&${playerConfig}`);
             masterIdNode.appendChild(container);
         }
 
@@ -449,11 +520,7 @@
          */
         function recentSearchTemplate(recentSearchArrayAsParam) {
             if (recentResults === false) {
-                const container = document.createElement('div');
-                container.setAttribute('id', templates.RECENT.ID_HOOK);
-                container.classList.add('app__recent');
-                rootIdNode = rootIdNode || document.getElementById(templates.ROOT);
-                rootIdNode.appendChild(container);
+
 
                 const containerTitle = document.createElement('div');
                 containerTitle.classList.add('results__title');
@@ -488,19 +555,13 @@
             }
         }
 
-        //TODO: fly
 
         return {
-            detailTemplate,
+            createLayout,
             resultsTemplate,
             paginationTemplate,
             recentSearchTemplate,
-            masterTemplate,
-            removeResults,
-            removePagination,
             previewTemplate,
-            noPreviewTemplate,
-            removePreview,
             playerTemplate
         };
     }
