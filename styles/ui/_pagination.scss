@@ -2,7 +2,8 @@
   display: flex;
   justify-content: flex-end;
   &__item {
-    background: red;
-    color: white;
+    background: $brand-primary;
+    padding: $spacing;
+    color: $brand-light;
   }
 }

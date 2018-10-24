@@ -1,7 +1,4 @@
 //"use strict";
-
-//TODO: fly
-
 (function () {
     const resultsNum = 6;
     const recentResultsNum = 5;
@@ -9,11 +6,9 @@
     const artWorkSetting = 'show_artwork=false';
     const autoPlayerSetting = 'auto_play=true';
 
-    //
     let collectionPageNumber = 0;
     let resultsInit = false;
     let paginationInit = false;
-
     let recentResults = false;
     let hasPagination = false;
 
@@ -23,8 +18,6 @@
     let inputContainerValue;
     let paginationHref;
 
-
-    //
     let rootIdNode;
     let detailIdNode;
     let detailSearchIdNode;
@@ -40,7 +33,8 @@
 
     const text = {
         INPUT_PLACEHOLDER: 'Search a song..',
-        RECENT_RESULTS_TITLE: "Recent results"
+        RECENT_RESULTS_TITLE: 'Recent results',
+        PAGINATION_NEXT: 'Next'
     };
 
     const templates = {
@@ -473,7 +467,7 @@
             }
             const containerItem = document.createElement('button');
             containerItem.classList.add('pagination__item');
-            containerItem.innerText = "Next >";
+            containerItem.innerText = text.PAGINATION_NEXT;
             containerItem.setAttribute('onclick', `triggerPaginationEvent()`);
             paginationNodeId.appendChild(containerItem);
             paginationInit = true;
@@ -494,7 +488,6 @@
                 containerImage.setAttribute('src', `${previewValue}`);
                 containerImage.classList.add('card__img');
                 container.appendChild(containerImage);
-                // container.style = `background-image: url(${previewValue})`;
             } else {
                 container.classList.add('card', 'card--no-preview');
             }
@@ -566,9 +559,12 @@
         };
     }
 
-    // Event Handlers
+    /**
+     * init function
+     * generating EventDetector instance;
+     * initialize API
+     */
     function init() {
-        // API method
         SC.initialize({
             client_id: apiId
         });

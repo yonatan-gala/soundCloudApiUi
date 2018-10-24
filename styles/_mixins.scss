@@ -6,11 +6,11 @@
 // -- $weight: font-weight, optional
 // -- $style: font-style, optional
 
-@mixin font-face($family, $variant, $weight:normal, $style: normal) {
+@mixin font-face($family, $variant, $weight: normal, $style: normal) {
   font-family: $family;
+  font-weight: $weight;
+  font-style: $style;
   src: local("#{$family $variant}"), local("#{$family}"+"-#{$variant}"),
   url("#{$fontpath}#{$family}-#{$variant}.woff2") format("woff2"),
   url("#{$fontpath}#{$family}-#{$variant}.woff") format("woff");
-  font-weight: $weight;
-  font-style: $style;
 }

@@ -4,23 +4,23 @@ $card-transition-duration: $default-transition-duration;
 $card-transition-timing: $default-transition-timing;
 
 .card {
-  width: 100%;
-  height: 100%;
+  transition: transform $card-transition-duration $card-transition-timing;
   background-repeat: no-repeat;
   background-size: cover;
   cursor: pointer;
-  transition: transform $card-transition-duration $card-transition-timing;
+  width: 100%;
+  height: 100%;
   &:hover {
     transform: scale($card-hover-scale);
   }
   &__img {
-    height: 100%;
     min-width: 100%;
+    height: 100%;
     object-fit: cover;
   }
   &--no-preview {
     background-image: url($imagepath + $card-play-control);
-    background-size: 10rem;
     background-position: 50%;
+    background-size: 10rem;
   }
 }

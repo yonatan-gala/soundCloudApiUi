@@ -18,14 +18,14 @@ $app-master-height: 30rem;
   }
 
   &__master {
-    overflow: hidden;
+    position: relative;
     background-color: $brand-secondary;
     background-image: url($imagepath + $app-master-bg);
     background-repeat: no-repeat;
-    background-size: $app-master-bg-size;
     background-position: $app-master-image-bg-position;
-    position: relative;
+    background-size: $app-master-bg-size;
     min-height: $app-master-height;
+    overflow: hidden;
   }
 
   &__recent {
@@ -41,7 +41,7 @@ $app-master-height: 30rem;
 }
 
 @media (min-width: 767px) {
-  .app__master{
+  .app__master {
     flex-basis: 40%;
     width: 40%;
   }

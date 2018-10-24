@@ -1,21 +1,22 @@
 .results {
   padding: ($spacing * 2) 0;
   &__item {
-    font-weight: $font-light;
-    font-size: $font-size-type;
-    line-height: $global-line-height;
-    padding: $spacing ($spacing / 2);
     cursor: pointer;
+    padding: $spacing ($spacing / 2);
+    font-size: $font-size-type;
+    font-weight: $font-light;
     &--default {
-      &:hover, &:active, &:focus {
+      &:hover,
+      &:active,
+      &:focus {
         color: $type-color-highlight;
       }
     }
     &--recent {
-      color: $type-color-light;
-      padding: $spacing ($spacing * 2);
-      margin-left: -($spacing * 2);
       margin-right: -($spacing * 2);
+      margin-left: -($spacing * 2);
+      padding: $spacing ($spacing * 2);
+      color: $type-color-light;
       &:nth-child(even) {
         background-color: $brand-secondary;
       }
@@ -27,9 +28,9 @@
     }
   }
   &__title {
-    font-weight: $font-bold;
-    font-size: $font-size-title;
-    color: $type-color-base;
     margin-bottom: $spacing;
+    color: $type-color-base;
+    font-size: $font-size-title;
+    font-weight: $font-bold;
   }
 }

@@ -3,9 +3,12 @@
 This exam use the SoundCloud API to fetch data and display it on a page.
 Vanila JS UI with Sound Cloud APi integration.
 
+### External URL 
+- [GitHubPages-SoundCloudApiUI](https://yonatan-gala.github.io/soundCloudApiUi/)
+
 ### API details
 - [soundcloud API docs](https://developers.soundcloud.com/docs/api/guide)
--  client_id: d 652006c469530a4a7d6184b18e16c81 
+-  client_id:E8IqLGTYxHll6SyaM7LKrMzKveWkcrjg 
 
 #### Browser Support
 -  latest Chrome release
@@ -34,19 +37,10 @@ searches and should be available for the user in subsequent visits.
 8. When clicked, a search history item should instigate a new search. 
 
 #### Added functionality
-1. search container
-  1.clear button after search
-    1.clears input
-    2.clear results
-    3.clear image container
-2. search results
-  1.total of fetched results
-  2.pagination instead of next button
-3. image container
-  1. show last search terms after new search
-  2. show search terms in local storage for returning visits.
-4. responsive.
-5. UI visual styles
+1. show last search terms after new search
+2. show search terms in local storage for returning visits.
+3. responsive.
+4. UI visual styles
 6. SCSS lint. 
   
 #### Code related info
@@ -57,7 +51,8 @@ searches and should be available for the user in subsequent visits.
       3. local server
       
 ##### CLI commands
-1. gulp connect
+1. gulp (default)
+2. gulp connect
 2. gulp build
 3. gulp watch
 4. gulp lint.      

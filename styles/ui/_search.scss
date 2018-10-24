@@ -1,22 +1,26 @@
+$search-height: 3rem;
+$search-btn-height: 1.5rem;
+$search-btn-width: 2.5rem;
+
 .search {
   display: flex;
-  border-radius: .5rem;
-  background-color: white;
-  overflow: hidden;
-  height: 3rem;
   align-items: center;
   border: 1px solid $type-color-base;
+  border-radius: .5rem;
+  background-color: $brand-light;
+  height: $search-height;
+  overflow: hidden;
 }
 
 .search__input {
   flex-grow: 1;
   background-color: transparent;
-  padding: .5rem;
+  padding: ($spacing / 2);
 }
 
 .search__btn {
   background: url($uri-search-icon) 50% no-repeat;
-  height: 1.5rem;
-  background-size: 1.5rem;
-  width: 2.5rem;
+  background-size: $search-btn-height;
+  width: $search-btn-width;
+  height: $search-btn-height;
 }
