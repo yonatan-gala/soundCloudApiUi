@@ -157,7 +157,6 @@
         }
 
         function triggerPaginationEvent() {
-            console.log("boom");
             myEventManager.getNextSongs(inputContainerIdNode.value);
 
         }
@@ -204,13 +203,12 @@
                 q: searchQuery,
             }).then(function (tracks) {
                 songsApiArray = tracks.collection;
-                console.log(tracks);
                 myTemplateEngine.resultsTemplate(songsApiArray);
                 manageRecentSearch(searchQuery);
                 if (tracks.next_href !== null) {
                     hasPagination = true;
                     paginationHref = tracks.next_href;
-                    collectionPageNumber += 6;
+                    collectionPageNumber += resultsNum;
                     myTemplateEngine.paginationTemplate()
                 } else {
                     hasPagination = false;
@@ -218,6 +216,12 @@
             });
         }
 
+        /**
+         * pagination API call with page offset
+         * pass current input value
+         * call for result render with songsApiArray
+         * @param currentSearchQuery
+         */
         function getNextSongs(currentSearchQuery) {
             SC.get('/tracks', {
                 limit: resultsNum,
@@ -225,12 +229,11 @@
                 q: currentSearchQuery,
             }).then(function (tracks) {
                 songsApiArray = tracks.collection;
-                console.log(tracks);
                 myTemplateEngine.resultsTemplate(songsApiArray);
                 if (tracks.next_href !== null) {
                     hasPagination = true;
                     paginationHref = tracks.next_href;
-                    collectionPageNumber += 6;
+                    collectionPageNumber += resultsNum;
                     myTemplateEngine.paginationTemplate()
                 } else {
                     hasPagination = false;
@@ -278,7 +281,8 @@
         }
 
         /**
-         *
+         * passing track id to get track image
+         * call preview template
          * @param capturedResultItemID
          */
         function manageResultItemPreview(capturedResultItemID) {
